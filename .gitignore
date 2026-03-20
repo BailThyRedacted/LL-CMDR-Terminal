@@ -1,0 +1,24 @@
+# Build artifacts
+bin/
+obj/
+*.dll
+*.pdb
+
+# Visual Studio
+.vs/
+.vscode/
+*.sln.user
+*.csproj.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+*.swp
+*.swo
+*~
+
+# Dependencies
+.nuget/
+packages/

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="EliteDataCollector.Core/EliteDataCollector.Core.csproj" />
+  <Project Path="EliteDataCollector.Host/EliteDataCollector.Host.csproj" />
+</Solution>
