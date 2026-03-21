@@ -1,7 +1,7 @@
 # Elite Dangerous Colonization Data Collector
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Windows](https://img.shields.io/badge/Windows-10%2B-0078D6.svg)](https://www.microsoft.com/windows)
 
 A lightweight, invisible background application that automatically collects colonization data from Elite Dangerous and uploads it to a central Supabase database for squadron members of **Lavigny's Legion**.
