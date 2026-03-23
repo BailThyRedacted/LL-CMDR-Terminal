@@ -37,11 +37,11 @@ namespace EliteDataCollector.Core
         // PRIVATE FIELDS - These are the services that do the actual work
         // ====================================================================
 
-        private readonly IGameProcessMonitor _gameMonitor;
-        private readonly IJournalMonitor _journalMonitor;
-        private readonly ICapiAuth _capiAuth;
-        private readonly ISquadronValidator _squadronValidator;
-        private readonly IOutputWriter? _outputWriter;
+        private readonly GameProcessMonitor _gameMonitor;
+        private readonly JournalMonitor _journalMonitor;
+        private readonly CapiAuth _capiAuth;
+        private readonly SquadronValidator _squadronValidator;
+        private readonly OutputWriter? _outputWriter;
 
         // ====================================================================
         // STATE FIELDS - Track what mode the orchestrator is in
@@ -80,11 +80,11 @@ namespace EliteDataCollector.Core
         /// - Makes it clear what dependencies this class needs
         /// </summary>
         public MainCore(
-            IGameProcessMonitor gameMonitor,
-            IJournalMonitor journalMonitor,
-            ICapiAuth capiAuth,
-            ISquadronValidator squadronValidator,
-            IOutputWriter? outputWriter = null)
+            GameProcessMonitor gameMonitor,
+            JournalMonitor journalMonitor,
+            CapiAuth capiAuth,
+            SquadronValidator squadronValidator,
+            OutputWriter? outputWriter = null)
         {
             // Null-check all required services
             // Use ?? throw pattern to fail fast with clear error

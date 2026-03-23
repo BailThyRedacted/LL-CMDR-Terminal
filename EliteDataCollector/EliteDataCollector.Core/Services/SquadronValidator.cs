@@ -11,7 +11,7 @@ namespace EliteDataCollector.Core.Services
     /// - Can be replaced with different validation logic (guild system, whitelist, etc.)
     /// - Access control should be clear and auditable
     /// </summary>
-    public interface ISquadronValidator
+    public interface SquadronValidator
     {
         /// <summary>
         /// Initializes the validator (e.g., loads approved squadron names from config).

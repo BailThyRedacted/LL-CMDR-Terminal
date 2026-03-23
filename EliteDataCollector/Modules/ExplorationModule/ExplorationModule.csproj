@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\EliteDataCollector.Core\EliteDataCollector.Core.csproj" />
+    <ProjectReference Include="..\..\EliteDataCollector.Core\EliteDataCollector.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

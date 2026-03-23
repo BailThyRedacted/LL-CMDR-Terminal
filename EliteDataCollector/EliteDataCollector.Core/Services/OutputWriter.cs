@@ -11,7 +11,7 @@ namespace EliteDataCollector.Core.Services
     /// - Windows Service: writes to event log
     /// - Without this, MainCore would be tightly coupled to a specific output method
     /// </summary>
-    public interface IOutputWriter
+    public interface OutputWriter
     {
         /// <summary>
         /// Writes a line of text to the output destination.

@@ -4,12 +4,12 @@ using EliteDataCollector.Core.Services;
 namespace EliteDataCollector.Core
 {
     /// <summary>
-    /// Simple console-based implementation of IOutputWriter.
+    /// Simple console-based implementation of OutputWriter.
     ///
     /// DESIGN DECISION:
-    /// This is a concrete implementation of the IOutputWriter interface.
+    /// This is a concrete implementation of the OutputWriter interface.
     /// By having this separate from MainCore, we can:
-    /// - Test MainCore with a mock IOutputWriter
+    /// - Test MainCore with a mock OutputWriter
     /// - Swap to GUI output later without changing MainCore
     /// - Reuse in multiple contexts (console app, tests, etc.)
     ///
@@ -17,7 +17,7 @@ namespace EliteDataCollector.Core
     /// var output = new ConsoleOutputWriter();
     /// var core = new MainCore(gameMonitor, journalMonitor, capiAuth, validator, output);
     /// </summary>
-    public class ConsoleOutputWriter : IOutputWriter
+    public class ConsoleOutputWriter : OutputWriter
     {
         /// <summary>
         /// Write a line to the console with timestamp prefix.

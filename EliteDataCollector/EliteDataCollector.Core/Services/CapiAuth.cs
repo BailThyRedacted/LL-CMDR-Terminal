@@ -11,7 +11,7 @@ namespace EliteDataCollector.Core.Services
     /// - Can swap JWT or other auth methods later
     /// - Keeps secret handling in one place
     /// </summary>
-    public interface ICapiAuth
+    public interface CapiAuth
     {
         /// <summary>
         /// Initializes the auth service (e.g., loads stored tokens from secure storage).
