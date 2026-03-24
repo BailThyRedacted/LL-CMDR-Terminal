@@ -82,19 +82,49 @@ namespace EliteDataCollector.Core
         public MainCore(
             GameProcessMonitor gameMonitor,
             JournalMonitor journalMonitor,
-            CapiAuth capiAuth,
-            SquadronValidator squadronValidator,
+            CapiAuth? capiAuth = null,
+            SquadronValidator? squadronValidator = null,
             OutputWriter? outputWriter = null)
         {
-            // Null-check all required services
-            // Use ?? throw pattern to fail fast with clear error
+            // Null-check required services
             _gameMonitor = gameMonitor ?? throw new ArgumentNullException(nameof(gameMonitor));
             _journalMonitor = journalMonitor ?? throw new ArgumentNullException(nameof(journalMonitor));
-            _capiAuth = capiAuth ?? throw new ArgumentNullException(nameof(capiAuth));
-            _squadronValidator = squadronValidator ?? throw new ArgumentNullException(nameof(squadronValidator));
+
+            // Optional services (can be null for minimal setup)
+            _capiAuth = capiAuth;
+            _squadronValidator = squadronValidator;
 
             // OutputWriter is optional (null is OK for silent operation)
             _outputWriter = outputWriter;
+        }
+
+        // ====================================================================
+        // PUBLIC CONTEXT METHODS
+        // ====================================================================
+
+        private int _commanderId = 0;
+        private string _commanderName = "Unknown";
+        private ModuleSettings? _modulePreferences = null;
+
+        /// <summary>
+        /// Set commander context from INARA auth (for data tracking).
+        /// </summary>
+        public void SetCommanderContext(int commanderId, string commanderName)
+        {
+            _commanderId = commanderId;
+            _commanderName = commanderName;
+            _outputWriter?.WriteLine($"MainCore: Commander context set: {commanderName} (ID: {commanderId})");
+        }
+
+        /// <summary>
+        /// Set module preferences (which modules to enable/disable).
+        /// </summary>
+        public void SetModulePreferences(ModuleSettings preferences)
+        {
+            _modulePreferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
+            _outputWriter?.WriteLine($"MainCore: Module preferences set");
+            _outputWriter?.WriteLine($"  - ColonizationModule: {(preferences.ColonizationEnabled ? "ENABLED" : "disabled")}");
+            _outputWriter?.WriteLine($"  - ExplorationModule: {(preferences.ExplorationEnabled ? "ENABLED" : "disabled")}");
         }
 
         // ====================================================================

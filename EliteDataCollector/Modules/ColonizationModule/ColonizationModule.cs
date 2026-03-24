@@ -11,69 +11,53 @@ namespace ColonizationModule
     /// <summary>
     /// Colonization Module - Monitors BGS (Background Simulation) and PowerPlay state.
     ///
-    /// Purpose: Track colonization progress in Elite Dangerous by monitoring:
-    /// - Current system location (via FSDJump and Location events)
-    /// - BGS faction states and influence
-    /// - PowerPlay power and allegiance
-    /// - Structure/project progress
+    /// Purpose: Track all visited systems and upload BGS/PowerPlay data:
+    /// - Track location (via FSDJump and Location events)
+    /// - Extract BGS faction states and influence (especially Lavigny's Legion)
+    /// - Extract PowerPlay power and allegiance
+    /// - Upload ALL systems to INARA API (for commander's personal record)
+    /// - Upload MATCHING systems to Supabase (for central database)
     ///
-    /// Data Flow:
-    /// 1. Player jumps to system → FSDJump event → Update _currentSystem
-    /// 2. Check if current system is in target list
-    /// 3. Extract BGS faction data and PowerPlay allegiance
-    /// 4. Upload to Supabase via SupabaseClient service
-    /// 5. Repeat for each system visit
+    /// Data Collection:
+    /// - System name and address
+    /// - Timestamp of visit
+    /// - Controlling faction and influence %
+    /// - Lavigny's Legion influence % (tracked separately)
+    /// - System allegiance and state
+    /// - BGS faction list (all factions, their influence, state)
+    /// - PowerPlay: controlling power, power state
     ///
-    /// Teaching: This is the first game loop module, demonstrating:
-    /// - GameLoopModule interface implementation
-    /// - Dependency injection of services
-    /// - JSON event parsing and filtering
-    /// - State management (tracking current system)
-    /// - Async/await for background operations
-    /// - Error resilience (never throw from event handlers)
+    /// Teaching: Updated GameLoopModule demonstrating:
+    /// - INARA authentication integration
+    /// - Dual-destination data upload (INARA + Supabase)
+    /// - Filtering by system list for Supabase
+    /// - BGS-specific data extraction
+    /// - PowerPlay tracking
     /// </summary>
     public class ColonizationModule : GameLoopModule
     {
         // ========== CONSTANTS ==========
 
         private const string MODULE_NAME = "Colonization";
-        private const string MODULE_DESC = "Monitors and reports colonization progress to Supabase";
+        private const string MODULE_DESC = "Monitors BGS and PowerPlay state, uploads to INARA and Supabase";
 
-        /// <summary>
-        /// Important events to process. All others are silently skipped.
-        /// This filtering reduces CPU usage and keeps logs clean.
-        /// </summary>
         private static readonly HashSet<string> IMPORTANT_EVENTS = new(StringComparer.Ordinal)
         {
             "Location",          // Player entered a station/surface
             "FSDJump",           // Player jumped to new system
-            "StructureBuy",      // Colonization project started
-            "StructureRepair",   // Project being worked on
-            "StructureSell",     // Project being cancelled/transferred
-            "StructureTransfer"  // Project transferred to another faction
         };
 
         // ========== INJECTED SERVICES ==========
 
-        /// <summary>Supabase client for database operations</summary>
-        private SupabaseClient _supabaseClient = null!;
-
-        /// <summary>Optional output writer for logging</summary>
+        private SupabaseClient? _supabaseClient;
+        private InaraAuth? _inaraAuth;
         private OutputWriter? _outputWriter;
 
         // ========== MODULE STATE ==========
 
-        /// <summary>Currently detected system name (updated on Location/FSDJump)</summary>
         private string? _currentSystem = null;
-
-        /// <summary>Currently detected system address (game provides this)</summary>
         private long _currentSystemAddress = 0;
-
-        /// <summary>
-        /// Set of target systems to monitor (case-insensitive for robustness)
-        /// Loaded once on startup from Supabase.
-        /// O(1) lookup performance for filtering.
-        /// </summary>
+        private int _commanderId = 0;
         private HashSet<string> _targetSystems = new(StringComparer.OrdinalIgnoreCase);
 
         // ========== MODULE PROPERTIES ==========
@@ -84,124 +68,66 @@ namespace ColonizationModule
         // ========== LIFECYCLE METHODS ==========
 
         /// <summary>
-        /// Initializes the colonization module.
-        ///
-        /// Teaching: Module initialization demonstrates:
-        /// - Extracting dependencies from IServiceProvider
-        /// - Loading configuration on startup
-        /// - Setting up initial state
-        /// - Error handling (log but continue gracefully)
-        ///
-        /// This runs once when the app starts, before any events are processed.
+        /// Initialize the colonization module.
+        /// Extract services and load target systems from Supabase.
         /// </summary>
         public async Task InitializeAsync(IServiceProvider services)
         {
             try
             {
+                _outputWriter = (OutputWriter?)services.GetService(typeof(OutputWriter));
+                _supabaseClient = (SupabaseClient?)services.GetService(typeof(SupabaseClient));
+                _inaraAuth = (InaraAuth?)services.GetService(typeof(InaraAuth));
+
                 _outputWriter?.WriteLine($"[{MODULE_NAME}] Initializing...");
 
-                // Extract services from dependency injection container
-                _supabaseClient = (SupabaseClient?)services.GetService(typeof(SupabaseClient))
-                    ?? throw new InvalidOperationException("SupabaseClient service not registered");
-
-                _outputWriter = (OutputWriter?)services.GetService(typeof(OutputWriter));
-
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] Dependencies injected successfully");
-
-                // Load target systems from Supabase on startup
+                // Load target systems from Supabase
                 await LoadTargetSystems();
 
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] Initialized successfully. Monitoring {_targetSystems.Count} target systems.");
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Ready to track BGS and PowerPlay data.");
+
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 _outputWriter?.WriteLine($"[{MODULE_NAME}] ERROR during initialization: {ex.Message}");
-                // Continue anyway - module will process all events if target list fails to load
             }
         }
 
         /// <summary>
-        /// Processes a journal line event from the game.
-        ///
-        /// Teaching: This is called frequently and must be fast
-        /// - Check event type against important events
-        /// - Route to appropriate handler
-        /// - Never throw (catch all exceptions)
-        /// - Log important events for debugging
-        ///
-        /// Performance: Must complete without blocking because JournalMonitor
-        /// continues raising events at game's pace (~10 events/sec during active play).
+        /// Process journal line events from the game.
+        /// Filter to Location and FSDJump events only.
         /// </summary>
         public async Task OnJournalLineAsync(string line, JsonDocument parsedEvent)
         {
             try
             {
-                // Extract event type from parsed JSON
                 if (!parsedEvent.RootElement.TryGetProperty("event", out var eventProp))
                     return;
 
                 var eventType = eventProp.GetString();
-                if (eventType == null)
+                if (eventType == null || !IMPORTANT_EVENTS.Contains(eventType))
                     return;
 
-                // Filter: only process important events
-                if (!IMPORTANT_EVENTS.Contains(eventType))
-                    return;
-
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] Processing event: {eventType}");
-
-                // Route to appropriate handler based on event type
+                // Process location events
                 if (eventType == "Location" || eventType == "FSDJump")
                 {
-                    // Update current system tracking
                     await ProcessLocationOrFsdJump(parsedEvent);
-                }
-                else if (eventType.StartsWith("Structure"))
-                {
-                    // Process structure/colonization projects
-                    await ProcessStructureEvent(parsedEvent, eventType);
                 }
             }
             catch (Exception ex)
             {
                 _outputWriter?.WriteLine($"[{MODULE_NAME}] ERROR processing event: {ex.Message}");
-                // Continue despite errors - background processing should never crash
             }
         }
 
-        /// <summary>
-        /// Processes commander profile updates from CAPI (optional).
-        ///
-        /// Teaching: Kept for interface compliance. Can be extended later
-        /// to extract rank, assets, or other profile-specific data.
-        ///
-        /// For now, this is a no-op (empty implementation).
-        /// </summary>
-        public Task OnCapiProfileAsync(JsonDocument profile)
-        {
-            // Not used in this phase - could extract profile data (rank, credits, etc.) in future
-            return Task.CompletedTask;
-        }
+        public Task OnCapiProfileAsync(JsonDocument profile) => Task.CompletedTask;
 
-        /// <summary>
-        /// Shuts down the colonization module.
-        ///
-        /// Teaching: Cleanup on app exit
-        /// - Save any pending state
-        /// - Close connections
-        /// - Release resources
-        /// - Never throw
-        ///
-        /// In this implementation, nothing needs cleanup, but pattern is shown
-        /// for modules that might need to save pending uploads or close connections.
-        /// </summary>
         public Task ShutdownAsync()
         {
             try
             {
                 _outputWriter?.WriteLine($"[{MODULE_NAME}] Shutting down...");
-                // No resources to clean up for this module
                 return Task.CompletedTask;
             }
             catch (Exception ex)
@@ -211,58 +137,11 @@ namespace ColonizationModule
             }
         }
 
-        // ========== PRIVATE HELPER METHODS ==========
+        // ========== PRIVATE EVENT HANDLERS ==========
 
         /// <summary>
-        /// Loads target systems from Supabase on startup.
-        ///
-        /// Teaching: Initialization pattern for cached data
-        /// - Fetch once on startup (single Supabase query)
-        /// - Store in local HashSet for fast lookups
-        /// - Handle failure gracefully (continue with empty list)
-        ///
-        /// Trade-off: Requires app restart to see new target systems.
-        /// Benefit: Single query on startup, O(1) lookups throughout app lifetime.
-        /// </summary>
-        private async Task LoadTargetSystems()
-        {
-            try
-            {
-                var systems = await _supabaseClient.GetTargetSystemsAsync();
-                _targetSystems = new HashSet<string>(systems, StringComparer.OrdinalIgnoreCase);
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] Loaded {_targetSystems.Count} target systems");
-            }
-            catch (Exception ex)
-            {
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] WARNING: Failed to load target systems: {ex.Message}");
-                _targetSystems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
-        /// <summary>
-        /// Processes Location and FSDJump events to track current system.
-        ///
-        /// Teaching: Event handler for location events
-        /// - Extract system name and address
-        /// - Check if in target system (filter before parsing expensive BGS data)
-        /// - Parse full system data (name, factions, power, power state)
-        /// - Upload to Supabase
-        ///
-        /// Example JSON (Location event):
-        /// {
-        ///   "timestamp": "2026-03-21T14:15:30Z",
-        ///   "event": "Location",
-        ///   "SystemAddress": 123456789,
-        ///   "StarSystem": "Sol",
-        ///   "SystemAllegiance": "Federation",
-        ///   "SystemFaction": { "name": "Federation" },
-        ///   "Factions": [
-        ///     { "name": "Sol Democrats", "Allegiance": "Federation", "Influence": 0.85, "FactionState": "Boom" },
-        ///     { "name": "Sol Liberals", "Allegiance": "Federation", "Influence": 0.15, "FactionState": "None" }
-        ///   ],
-        ///   "PowerplayState": "Contested",
-        ///   "Powers": ["Li Yong-Rui"]
-        /// }
+        /// Process Location or FSDJump event.
+        /// Extract BGS and PowerPlay data, upload to INARA and (if matching) Supabase.
         /// </summary>
         private async Task ProcessLocationOrFsdJump(JsonDocument parsedEvent)
         {
@@ -271,109 +150,59 @@ namespace ColonizationModule
                 var root = parsedEvent.RootElement;
 
                 // Extract system name and address
-                if (!root.TryGetProperty("StarSystem", out var systemNameProp))
+                if (!root.TryGetProperty("StarSystem", out var systemProp))
                     return;
 
-                var systemName = systemNameProp.GetString();
+                var systemName = systemProp.GetString();
                 if (systemName == null)
                     return;
 
                 _currentSystem = systemName;
 
-                // Extract system address for database key
                 if (root.TryGetProperty("SystemAddress", out var addressProp))
                 {
                     _currentSystemAddress = addressProp.GetInt64();
                 }
 
-                // Filter: Only process if in target system
-                if (!_targetSystems.Contains(systemName))
-                {
-                    _outputWriter?.WriteLine(
-                        $"[{MODULE_NAME}] System '{systemName}' not in target list. Skipping.");
-                    return;
-                }
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Location: {systemName}");
 
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] Current system: {systemName} (target system detected)");
-
-                // Parse full system data
+                // Parse system data (BGS and PowerPlay info)
                 var systemData = ParseSystemData(parsedEvent);
 
-                // Upload to Supabase
-                await _supabaseClient.UpsertSystemDataAsync(systemData);
+                // Always upload to INARA (all systems)
+                await UploadToInara(systemData);
 
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] System data uploaded: {systemData.Factions?.Count ?? 0} factions");
-            }
-            catch (Exception ex)
-            {
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] ERROR processing location event: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Processes structure-related events (building, repairing, selling).
-        ///
-        /// Teaching: Event handler for structure events
-        /// - Extract system address and structure data
-        /// - Filter: only process if in target system
-        /// - Parse structure list
-        /// - Upload to Supabase
-        /// </summary>
-        private async Task ProcessStructureEvent(JsonDocument parsedEvent, string eventType)
-        {
-            try
-            {
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] Processing structure event: {eventType}");
-
-                // Filter: Only process if in target system
-                if (string.IsNullOrWhiteSpace(_currentSystem) ||
-                    !_targetSystems.Contains(_currentSystem))
+                // Only upload to Supabase if system is in target list
+                if (_targetSystems.Contains(systemName))
                 {
-                    return;
+                    await UploadToSupabase(systemData);
                 }
-
-                // For now, just log. Full implementation would extract structure data
-                // and upload to Supabase structures table
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] Structure event in target system '{_currentSystem}'");
-
-                // TODO: Parse structure data and upload
-                // var structures = ParseStructures(parsedEvent);
-                // await _supabaseClient.UpsertStructuresAsync(_currentSystemAddress, structures);
             }
             catch (Exception ex)
             {
-                _outputWriter?.WriteLine(
-                    $"[{MODULE_NAME}] ERROR processing structure event: {ex.Message}");
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] ERROR processing location: {ex.Message}");
             }
         }
 
+        // ========== PRIVATE DATA EXTRACTION ==========
+
         /// <summary>
-        /// Parses system data from a Location/FSDJump event.
-        ///
-        /// Teaching: JSON parsing pattern with safe property access
-        /// - Use TryGetProperty for safe access (no exceptions on missing fields)
-        /// - Extract nullable fields (could be missing in some events)
-        /// - Build structured object from parsed data
-        /// - Return even if some fields missing (graceful degradation)
-        ///
-        /// Fields extracted:
-        /// - System name and address
-        /// - Controlling faction
-        /// - PowerPlay power and state
-        /// - Faction list with influence and state
+        /// Parse system data from Location/FSDJump event.
+        /// Extract: faction influence, Lavigny's Legion influence, PowerPlay info, etc.
         /// </summary>
         private SystemData ParseSystemData(JsonDocument eventJson)
         {
             var root = eventJson.RootElement;
+            var timestamp = DateTime.UtcNow;
 
-            // Extract system basic info
-            var systemName = root.TryGetProperty("StarSystem", out var nameProp)
-                ? nameProp.GetString() ?? "Unknown"
+            if (root.TryGetProperty("timestamp", out var timestampProp))
+            {
+                if (DateTime.TryParse(timestampProp.GetString(), out var parsedTime))
+                    timestamp = parsedTime;
+            }
+
+            var systemName = root.TryGetProperty("StarSystem", out var systemProp)
+                ? systemProp.GetString() ?? "Unknown"
                 : "Unknown";
 
             var systemAddress = root.TryGetProperty("SystemAddress", out var addressProp)
@@ -381,113 +210,176 @@ namespace ColonizationModule
                 : 0;
 
             // Extract controlling faction
-            var controllingFaction = root.TryGetProperty("SystemFaction", out var factionProp)
-                && factionProp.TryGetProperty("name", out var factionNameProp)
-                ? factionNameProp.GetString() ?? "Unknown"
+            var controllingFaction = root.TryGetProperty("SystemFaction", out var factionProp) &&
+                                    factionProp.TryGetProperty("name", out var nameProp)
+                ? nameProp.GetString() ?? "Unknown"
                 : "Unknown";
 
-            // Extract PowerPlay power (e.g., "Li Yong-Rui", "Aisling Duval")
-            var power = "None";
-            if (root.TryGetProperty("Powers", out var powersProp) && powersProp.ValueKind == JsonValueKind.Array)
-            {
-                var firstPower = powersProp.EnumerateArray().FirstOrDefault();
-                if (firstPower.ValueKind == JsonValueKind.String)
-                {
-                    power = firstPower.GetString() ?? "None";
-                }
-            }
+            // Extract PowerPlay info
+            var power = root.TryGetProperty("Power", out var powerProp) &&
+                       powerProp.ValueKind != JsonValueKind.Null
+                ? powerProp.GetString()
+                : null;
 
-            // Extract PowerPlay state (e.g., "Contested", "Headquarters", "Control")
-            var powerState = root.TryGetProperty("PowerplayState", out var stateProp)
-                ? stateProp.GetString() ?? "None"
-                : "None";
+            var powerState = root.TryGetProperty("PowerplayState", out var stateProp) &&
+                            stateProp.ValueKind != JsonValueKind.Null
+                ? stateProp.GetString()
+                : null;
 
-            // Parse faction list
+            // Parse factions (includes Lavigny's Legion influence)
             var factions = ParseFactions(eventJson);
 
-            // Build and return SystemData object
+            // Extract Lavigny's Legion influence specifically
+            var lavignyInfluence = factions
+                .FirstOrDefault(f => f.Name.Contains("Legion", StringComparison.OrdinalIgnoreCase))
+                ?.Influence ?? 0.0;
+
             return new SystemData
             {
                 Id = systemAddress,
                 SystemName = systemName,
+                Timestamp = timestamp,
                 ControllingFaction = controllingFaction,
-                Power = power,
-                PowerState = powerState,
+                Power = power ?? "None",
+                PowerState = powerState ?? "None",
                 Factions = factions,
-                Timestamp = DateTime.UtcNow
+                Structures = new List<Structure>(),
+                // Additional fields (will add to model)
+                LavignyInfluence = lavignyInfluence
             };
         }
 
         /// <summary>
-        /// Parses faction list from a Location/FSDJump event.
-        ///
-        /// Teaching: Parsing JSON arrays
-        /// - Use EnumerateArray() to iterate JSON array elements
-        /// - Extract properties from each faction object
-        /// - Handle missing or malformed data gracefully
-        /// - Return list of parsed objects
-        ///
-        /// Faction data includes:
-        /// - Name (faction name)
-        /// - Influence (0.0 to 1.0, their market share)
-        /// - State (e.g., "Boom", "None", "War", "Election")
-        /// - Allegiance (e.g., "Federation", "Empire", "Independent")
+        /// Parse faction list from event.
         /// </summary>
         private List<FactionInfluence> ParseFactions(JsonDocument eventJson)
         {
             var factions = new List<FactionInfluence>();
 
-            try
+            var root = eventJson.RootElement;
+            if (!root.TryGetProperty("Factions", out var factionsArray))
+                return factions;
+
+            foreach (var factionElement in factionsArray.EnumerateArray())
             {
-                var root = eventJson.RootElement;
+                var name = factionElement.TryGetProperty("Name", out var nameProp)
+                    ? nameProp.GetString() ?? "Unknown"
+                    : "Unknown";
 
-                if (!root.TryGetProperty("Factions", out var factionsArray))
-                    return factions;
+                var influence = factionElement.TryGetProperty("Influence", out var influenceProp)
+                    ? influenceProp.GetDouble()
+                    : 0.0;
 
-                if (factionsArray.ValueKind != JsonValueKind.Array)
-                    return factions;
+                var state = factionElement.TryGetProperty("FactionState", out var stateProp)
+                    ? stateProp.GetString() ?? "None"
+                    : "None";
 
-                foreach (var factionElement in factionsArray.EnumerateArray())
+                var allegiance = factionElement.TryGetProperty("Allegiance", out var alleg)
+                    ? alleg.GetString() ?? "Independent"
+                    : "Independent";
+
+                factions.Add(new FactionInfluence
                 {
-                    try
-                    {
-                        var name = factionElement.TryGetProperty("name", out var nameProp)
-                            ? nameProp.GetString() ?? "Unknown"
-                            : "Unknown";
-
-                        var influence = factionElement.TryGetProperty("Influence", out var influenceProp)
-                            ? influenceProp.GetDouble()
-                            : 0.0;
-
-                        var state = factionElement.TryGetProperty("FactionState", out var stateProp)
-                            ? stateProp.GetString() ?? "None"
-                            : "None";
-
-                        var allegiance = factionElement.TryGetProperty("Allegiance", out var allegianceProp)
-                            ? allegianceProp.GetString() ?? "Unknown"
-                            : "Unknown";
-
-                        factions.Add(new FactionInfluence
-                        {
-                            Name = name,
-                            Influence = (float)influence,
-                            State = state,
-                            Allegiance = allegiance
-                        });
-                    }
-                    catch
-                    {
-                        // Skip malformed faction, continue with next
-                        continue;
-                    }
-                }
-            }
-            catch
-            {
-                // If parsing fails, return whatever we got so far
+                    Name = name,
+                    Influence = influence,
+                    State = state,
+                    Allegiance = allegiance
+                });
             }
 
             return factions;
+        }
+
+        // ========== PRIVATE UPLOAD METHODS ==========
+
+        /// <summary>
+        /// Upload system data to INARA (all systems).
+        /// Uses INARA API for commander's personal record.
+        /// </summary>
+        private async Task UploadToInara(SystemData systemData)
+        {
+            try
+            {
+                if (_inaraAuth == null)
+                {
+                    _outputWriter?.WriteLine($"[{MODULE_NAME}] INARA service not available, skipping upload");
+                    return;
+                }
+
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Uploading to INARA: {systemData.SystemName}");
+
+                // TODO: Implement INARA upload logic
+                // Would call: _inaraAuth.SubmitSystemDataAsync(systemData)
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] ERROR uploading to INARA: {ex.Message}");
+                // Graceful degradation - don't fail the module
+            }
+        }
+
+        /// <summary>
+        /// Upload system data to Supabase (only matching systems).
+        /// For systems in target list only.
+        /// </summary>
+        private async Task UploadToSupabase(SystemData systemData)
+        {
+            try
+            {
+                if (_supabaseClient == null)
+                {
+                    _outputWriter?.WriteLine($"[{MODULE_NAME}] Supabase service not available, skipping upload");
+                    return;
+                }
+
+                if (!_targetSystems.Contains(systemData.SystemName))
+                {
+                    _outputWriter?.WriteLine($"[{MODULE_NAME}] System '{systemData.SystemName}' not in target list, skipping Supabase upload");
+                    return;
+                }
+
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Uploading to Supabase: {systemData.SystemName}");
+
+                await _supabaseClient.UpsertSystemDataAsync(systemData);
+
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] ✓ Uploaded to Supabase: {systemData.SystemName}");
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] ERROR uploading to Supabase: {ex.Message}");
+                // Graceful degradation - don't fail the module
+            }
+        }
+
+        // ========== PRIVATE LOADING METHODS ==========
+
+        /// <summary>
+        /// Load target systems from Supabase.
+        /// These are the systems we monitor and report to Supabase.
+        /// </summary>
+        private async Task LoadTargetSystems()
+        {
+            try
+            {
+                if (_supabaseClient == null)
+                {
+                    _outputWriter?.WriteLine($"[{MODULE_NAME}] Supabase not configured, tracking all systems (INARA only)");
+                    return;
+                }
+
+                var systems = await _supabaseClient.GetTargetSystemsAsync();
+                _targetSystems = new HashSet<string>(systems, StringComparer.OrdinalIgnoreCase);
+
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Loaded {_targetSystems.Count} target systems from Supabase");
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] WARNING: Could not load target systems: {ex.Message}");
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Continuing - will track all systems for INARA");
+                _targetSystems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            }
         }
     }
 }

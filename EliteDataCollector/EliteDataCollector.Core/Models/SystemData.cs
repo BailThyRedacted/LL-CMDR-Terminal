@@ -32,6 +32,9 @@ namespace EliteDataCollector.Core.Models
         // List of structures currently under construction
         public List<Structure> Structures { get; set; }
 
+        // Lavigny's Legion influence % in this system (tracked separately for easy analytics)
+        public double LavignyInfluence { get; set; }
+
         // Constructor to initialize the lists so they are never null
         public SystemData()
         {
