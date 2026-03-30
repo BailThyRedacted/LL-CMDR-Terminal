@@ -1,5 +1,7 @@
 # MainCore Implementation - Design Decisions Summary
 
+**Note:** This document reflects the v1.1 architecture. Authentication services (ICapiAuth, ISquadronValidator) have been removed for simplification.
+
 ## What We Built
 
 We created the **orchestrator** - the conductor of the entire application. This is a state machine that manages all services and their interactions.
@@ -9,10 +11,8 @@ We created the **orchestrator** - the conductor of the entire application. This 
 1. **MainCore.cs** - The orchestrator class (main logic)
 2. **IGameProcessMonitor.cs** - Interface for detecting game launch/exit
 3. **IJournalMonitor.cs** - Interface for reading game journal
-4. **ICapiAuth.cs** - Interface for authentication
-5. **ISquadronValidator.cs** - Interface for squadron membership check
-6. **IOutputWriter.cs** - Interface for logging/output
-7. **ConsoleOutputWriter.cs** - Simple console implementation of IOutputWriter
+4. **IOutputWriter.cs** - Interface for logging/output
+5. **ConsoleOutputWriter.cs** - Simple console implementation of IOutputWriter
 
 ---
 

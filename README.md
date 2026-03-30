@@ -205,7 +205,7 @@ dotnet run
 
 [GameProcessMonitor] Game launched detected! (EliteDangerous64.exe)
 [JournalMonitor] Started monitoring journal
-[Colonization] Dependencies injected successfully
+[Colonization] Initialized
 [Exploration] Started ready to scan planets.
 
 [Exploration] Scanned: Sol 1 - Score: 65/100

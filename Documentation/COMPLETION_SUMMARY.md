@@ -11,8 +11,6 @@ EliteDataCollector.Core/
 └── Services/
     ├── IGameProcessMonitor.cs           # Detects game launch/exit
     ├── IJournalMonitor.cs               # Reads game journal
-    ├── ICapiAuth.cs                     # Frontier authentication
-    ├── ISquadronValidator.cs            # Squadron membership check
     └── IOutputWriter.cs                 # Logging abstraction
 ```
 
@@ -33,7 +31,6 @@ Runway (GameProcessMonitor)
      ↓
 Tower (MainCore)
   ├─ Hears the notification
-  ├─ Checks: "Are we allowed to land?" (validates pilots/squadron)
   ├─ Signals: "Start collecting baggage" (starts JournalMonitor)
   └─ Starts coordinating ground operations
      ↓
@@ -64,7 +61,7 @@ var core = new MainCore(gameMonitor, journalMonitor, capiAuth, validator);
 await core.InitializeAsync();
 // ✓ Subscribes to events
 // ✓ Starts game process monitor
-// ✓ Initializes services
+// ✓ Initializes modules
 // Now waiting for game launch (IDLE state)
 ```
 
@@ -75,8 +72,6 @@ GameProcessMonitor detects EliteDangerous64.exe
   → MainCore.OnGameLaunched() called
   → Calls StartAsync()
     ├─ Starts journal monitoring
-    ├─ Refreshes authentication
-    ├─ Validates squadron
     └─ Set _isRunning = true (RUNNING state)
 ```
 

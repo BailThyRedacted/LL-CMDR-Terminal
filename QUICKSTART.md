@@ -109,16 +109,19 @@ dotnet run
 You should see:
 ```
 [GameProcessMonitor] Starting game process monitoring...
-[JournalMonitor] Journal monitor initialized.
+[JournalMonitor] Monitoring journal folder: C:\Users\...\Saved Games\Frontier Developments\Elite Dangerous\Logs
 [Colonization] Initializing...
 [Exploration] Initializing...
+[MainCore] Waiting for game launch...
 ```
 
 ### 2. Launch Elite Dangerous
 Start the game in the launcher. The app will detect it automatically:
 ```
-[GameProcessMonitor] Game launched detected!
-[JournalMonitor] Journal monitor started...
+[GameProcessMonitor] Game launched detected! (EliteDangerous64.exe)
+[JournalMonitor] Started monitoring journal
+[Colonization] Initialized
+[Exploration] Started ready to scan planets.
 ```
 
 ### 3. Start Playing
