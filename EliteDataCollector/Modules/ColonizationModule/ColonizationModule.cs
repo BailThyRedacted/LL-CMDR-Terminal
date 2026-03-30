@@ -15,8 +15,7 @@ namespace ColonizationModule
     /// - Track location (via FSDJump and Location events)
     /// - Extract BGS faction states and influence (especially Lavigny's Legion)
     /// - Extract PowerPlay power and allegiance
-    /// - Upload ALL systems to INARA API (for commander's personal record)
-    /// - Upload MATCHING systems to Supabase (for central database)
+    /// - Upload matching systems to Supabase (for central database)
     ///
     /// Data Collection:
     /// - System name and address
@@ -28,9 +27,8 @@ namespace ColonizationModule
     /// - PowerPlay: controlling power, power state
     ///
     /// Teaching: Updated GameLoopModule demonstrating:
-    /// - INARA authentication integration
-    /// - Dual-destination data upload (INARA + Supabase)
-    /// - Filtering by system list for Supabase
+    /// - Supabase integration
+    /// - Filtering by system list
     /// - BGS-specific data extraction
     /// - PowerPlay tracking
     /// </summary>
@@ -50,7 +48,6 @@ namespace ColonizationModule
         // ========== INJECTED SERVICES ==========
 
         private SupabaseClient? _supabaseClient;
-        private InaraAuth? _inaraAuth;
         private OutputWriter? _outputWriter;
 
         // ========== MODULE STATE ==========
@@ -77,7 +74,6 @@ namespace ColonizationModule
             {
                 _outputWriter = (OutputWriter?)services.GetService(typeof(OutputWriter));
                 _supabaseClient = (SupabaseClient?)services.GetService(typeof(SupabaseClient));
-                _inaraAuth = (InaraAuth?)services.GetService(typeof(InaraAuth));
 
                 _outputWriter?.WriteLine($"[{MODULE_NAME}] Initializing...");
 
@@ -300,16 +296,9 @@ namespace ColonizationModule
         {
             try
             {
-                if (_inaraAuth == null)
-                {
-                    _outputWriter?.WriteLine($"[{MODULE_NAME}] INARA service not available, skipping upload");
-                    return;
-                }
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Uploading system data (INARA upload not implemented)");
 
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] Uploading to INARA: {systemData.SystemName}");
-
-                // TODO: Implement INARA upload logic
-                // Would call: _inaraAuth.SubmitSystemDataAsync(systemData)
+                // TODO: Implement data upload logic if needed
 
                 await Task.CompletedTask;
             }

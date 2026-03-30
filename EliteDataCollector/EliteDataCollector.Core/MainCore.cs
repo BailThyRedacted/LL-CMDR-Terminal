@@ -39,8 +39,6 @@ namespace EliteDataCollector.Core
 
         private readonly GameProcessMonitor _gameMonitor;
         private readonly JournalMonitor _journalMonitor;
-        private readonly CapiAuth _capiAuth;
-        private readonly SquadronValidator _squadronValidator;
         private readonly OutputWriter? _outputWriter;
 
         // ====================================================================
@@ -69,8 +67,6 @@ namespace EliteDataCollector.Core
         /// WHY EACH PARAMETER?
         /// - gameMonitor: Detects when game launches/exits
         /// - journalMonitor: Reads game journal events
-        /// - capiAuth: Manages authentication tokens
-        /// - squadronValidator: Checks squadron membership
         /// - outputWriter: Logs messages (can be null for silent mode)
         ///
         /// WHY DEPENDENCY INJECTION?
@@ -82,17 +78,11 @@ namespace EliteDataCollector.Core
         public MainCore(
             GameProcessMonitor gameMonitor,
             JournalMonitor journalMonitor,
-            CapiAuth? capiAuth = null,
-            SquadronValidator? squadronValidator = null,
             OutputWriter? outputWriter = null)
         {
             // Null-check required services
             _gameMonitor = gameMonitor ?? throw new ArgumentNullException(nameof(gameMonitor));
             _journalMonitor = journalMonitor ?? throw new ArgumentNullException(nameof(journalMonitor));
-
-            // Optional services (can be null for minimal setup)
-            _capiAuth = capiAuth;
-            _squadronValidator = squadronValidator;
 
             // OutputWriter is optional (null is OK for silent operation)
             _outputWriter = outputWriter;
@@ -107,7 +97,7 @@ namespace EliteDataCollector.Core
         private ModuleSettings? _modulePreferences = null;
 
         /// <summary>
-        /// Set commander context from INARA auth (for data tracking).
+        /// Set commander context (for data tracking).
         /// </summary>
         public void SetCommanderContext(int commanderId, string commanderName)
         {
@@ -174,13 +164,6 @@ namespace EliteDataCollector.Core
                 _outputWriter?.WriteLine("  - Starting game process monitor...");
                 await _gameMonitor.StartAsync();
 
-                // STEP 3: Initialize other services
-                // They're initialized but not "started" - they wait until game launches
-                _outputWriter?.WriteLine("  - Initializing CAPI auth...");
-                await _capiAuth.InitializeAsync();
-
-                _outputWriter?.WriteLine("  - Initializing squadron validator...");
-                await _squadronValidator.InitializeAsync();
 
                 // STEP 4: Mark as initialized
                 _isInitialized = true;
@@ -206,18 +189,12 @@ namespace EliteDataCollector.Core
         /// 1. Validate that initialization is complete
         /// 2. If already running, do nothing (idempotent)
         /// 3. Start journal monitoring
-        /// 4. Refresh authentication tokens
-        /// 5. Validate squadron membership
-        /// 6. If validation fails, stop immediately
-        /// 7. Mark as running
+        /// 4. Mark as running
         ///
         /// WHY THESE STEPS?
         /// - We need initialized state before starting
         /// - Idempotent (safe to call multiple times)
-        /// - Journal monitor starts before validation (we want to see events)
-        /// - Auth refresh ensures tokens aren't stale
-        /// - Squadron check is an access control gate
-        /// - If squadron fails, we DON'T collect data (security)
+        /// - Journal monitor starts and begins reading game events
         ///
         /// CALLED WHEN:
         /// - Game process is detected (via OnGameLaunched event)
@@ -248,40 +225,10 @@ namespace EliteDataCollector.Core
                 _outputWriter?.WriteLine("  - Starting journal monitor...");
                 await _journalMonitor.StartAsync();
 
-                // STEP 2: Refresh authentication
-                // Tokens might have expired while game was closed
-                _outputWriter?.WriteLine("  - Refreshing CAPI authentication...");
-                try
-                {
-                    await _capiAuth.RefreshTokenAsync();
-                }
-                catch (Exception ex)
-                {
-                    _outputWriter?.WriteLine($"  - Auth refresh failed: {ex.Message}. Checking for stored credentials...");
-                    if (!_capiAuth.HasStoredCredentials())
-                    {
-                        _outputWriter?.WriteLine("  - No stored credentials. User must authenticate first.");
-                        await _journalMonitor.StopAsync();
-                        return;
-                    }
-                }
-
-                // STEP 3: Validate squadron membership
-                // This is a security gate - unauthorized users don't collect data
-                _outputWriter?.WriteLine("  - Validating squadron membership...");
-                var isValidMember = await _squadronValidator.ValidateAsync();
-
-                if (!isValidMember)
-                {
-                    _outputWriter?.WriteLine("  - Squadron validation FAILED. Stopping data collection.");
-                    await _journalMonitor.StopAsync();
-                    return; // Don't mark as running
-                }
-
-                // STEP 4: Mark as running
+                // STEP 2: Mark as running
                 _isRunning = true;
 
-                _outputWriter?.WriteLine($"MainCore: Data collection started (Squadron: {_squadronValidator.GetValidatedSquadron()})");
+                _outputWriter?.WriteLine("MainCore: Data collection started");
             }
             catch (Exception ex)
             {

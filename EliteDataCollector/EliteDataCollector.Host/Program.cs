@@ -29,12 +29,42 @@ namespace EliteDataCollector.Host
                 // Set up dependency injection
                 var services = new ServiceCollection();
                 services.AddSingleton(configuration);
-                services.AddSingleton<OutputWriter, ConsoleOutputWriter>();
+
+                // TEACHING NOTE - Composite Logging:
+                // We now use CompositeOutputWriter to log to BOTH console AND file.
+                // This gives us persistent logs + real-time console feedback.
+                //
+                // Why this is good for debugging:
+                // - See important events in real-time on console
+                // - Review detailed history in %APPDATA%\EliteDangerousDataCollector\debug.log
+                // - If app crashes, logs are safely on disk
+                // - Can change log detail level (Debug, Info, Warning) at runtime
+                services.AddSingleton<OutputWriter>(sp =>
+                {
+                    var consoleWriter = new ConsoleOutputWriter();
+                    var fileWriter = new FileOutputWriter();
+
+                    // By default, show Info level and above (hide Debug messages)
+                    // Users can modify console log level later if needed
+                    consoleWriter.SetMinimumLogLevel(LogLevel.Info);
+
+                    return new CompositeOutputWriter(consoleWriter, fileWriter);
+                });
+
                 services.AddSingleton<SettingsManager, SettingsManagerImpl>();
                 services.AddSingleton<KeyValidator, KeyValidatorImpl>();
                 services.AddSingleton<SupabaseClient>(sp =>
                     new SupabaseClientImpl(configuration, sp.GetRequiredService<OutputWriter>()));
                 services.AddSingleton<SetupConsole>();
+
+                // TEACHING NOTE - Game Detection Services:
+                // These are the actual implementations of the monitoring interfaces.
+                // They are registered as singletons so they persist for the app lifetime.
+                services.AddSingleton<GameProcessMonitor>(sp =>
+                    new GameProcessMonitorImpl(sp.GetRequiredService<OutputWriter>(), pollIntervalMs: 5000));
+
+                services.AddSingleton<JournalMonitor>(sp =>
+                    new JournalMonitorImpl(sp.GetRequiredService<OutputWriter>()));
 
                 var serviceProvider = services.BuildServiceProvider();
 
@@ -53,6 +83,18 @@ namespace EliteDataCollector.Host
                 outputWriter.WriteLine($"ColonizationModule: {(settings.Modules.ColonizationEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine($"ExplorationModule: {(settings.Modules.ExplorationEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine("");
+
+                // ===== INITIALIZE MAINCORE =====
+                var gameMonitor = serviceProvider.GetRequiredService<GameProcessMonitor>();
+                var journalMonitor = serviceProvider.GetRequiredService<JournalMonitor>();
+
+                var mainCore = new MainCore(gameMonitor, journalMonitor, outputWriter: outputWriter);
+                mainCore.SetCommanderContext(1, settings.CommanderName);
+                mainCore.SetModulePreferences(settings.Modules);
+
+                await mainCore.InitializeAsync();
+
+                outputWriter.WriteLine("");
                 outputWriter.WriteLine("Waiting for Elite Dangerous to launch...");
                 outputWriter.WriteLine("(Press Ctrl+C to exit)");
                 outputWriter.WriteLine("");
@@ -66,6 +108,11 @@ namespace EliteDataCollector.Host
                 };
 
                 exitEvent.WaitOne();
+
+                // ===== SHUTDOWN =====
+                outputWriter.WriteLine("");
+                outputWriter.WriteLine("Shutting down MainCore...");
+                await mainCore.ShutdownAsync();
 
                 outputWriter.WriteLine("");
                 outputWriter.WriteLine("Shutting down...");
