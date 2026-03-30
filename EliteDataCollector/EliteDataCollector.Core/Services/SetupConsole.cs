@@ -8,28 +8,28 @@ namespace EliteDataCollector.Core.Services
     /// Interactive console for first-time setup.
     ///
     /// Teaching: Console UI pattern for user interaction
-    /// - Prompts user for INARA API key
-    /// - Verifies credentials with INARA
+    /// - Prompts user for authentication key
+    /// - Validates key using local key validator
     /// - Asks about module preferences
     /// - Saves encrypted settings
     /// - Never exposes internal complexity (no mention of Supabase, encryption, etc.)
     ///
     /// User experience is clean and simple:
-    /// 1. Enter INARA API key
-    /// 2. Verify with INARA
+    /// 1. Enter authentication key
+    /// 2. Validate locally
     /// 3. Enable/disable modules
     /// 4. Done - app starts
     /// </summary>
     public class SetupConsole
     {
         private readonly SettingsManager _settingsManager;
-        private readonly InaraAuth _inaraAuth;
+        private readonly KeyValidator _keyValidator;
         private readonly OutputWriter? _outputWriter;
 
-        public SetupConsole(SettingsManager settingsManager, InaraAuth inaraAuth, OutputWriter? outputWriter = null)
+        public SetupConsole(SettingsManager settingsManager, KeyValidator keyValidator, OutputWriter? outputWriter = null)
         {
             _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
-            _inaraAuth = inaraAuth ?? throw new ArgumentNullException(nameof(inaraAuth));
+            _keyValidator = keyValidator ?? throw new ArgumentNullException(nameof(keyValidator));
             _outputWriter = outputWriter;
         }
 
@@ -56,24 +56,25 @@ namespace EliteDataCollector.Core.Services
             _outputWriter?.WriteLine("========================================");
             _outputWriter?.WriteLine("");
 
-            // Step 1: Get INARA API key
-            settings.InaraApiKeyEncrypted = PromptForInaraKey();
+            // Step 1: Get authentication key
+            var key = PromptForKey();
 
-            // Step 2: Verify with INARA
+            // Step 2: Validate key (throws exception if invalid)
             try
             {
-                var (commanderId, commanderName) = await _inaraAuth.VerifyApiKeyAsync(settings.InaraApiKeyEncrypted);
+                var (valid, commanderId, commanderName) = _keyValidator.ValidateKey(key);
+                settings.InaraApiKeyEncrypted = key;  // Store the key
                 settings.CommanderId = commanderId;
                 settings.CommanderName = commanderName;
                 settings.LastVerified = DateTime.UtcNow;
 
-                _outputWriter?.WriteLine($"✓ Authorization successful: {commanderName}");
+                _outputWriter?.WriteLine($"✓ Key validation successful: {commanderName}");
                 _outputWriter?.WriteLine("");
             }
             catch (Exception ex)
             {
                 _outputWriter?.WriteLine($"✗ Error: {ex.Message}");
-                _outputWriter?.WriteLine("Please check your API key and try again.");
+                _outputWriter?.WriteLine("Please check your key and try again.");
                 throw;
             }
 
@@ -94,26 +95,27 @@ namespace EliteDataCollector.Core.Services
         }
 
         /// <summary>
-        /// Prompt user for INARA API key.
-        /// Get it from: https://inara.cz/account/settings/
+        /// Prompt user for authentication key.
+        /// Key format: KEY-CMDR[9-digit-id]-[checksum]
+        /// Example: KEY-CMDR000000123-ABC123EF
         /// </summary>
-        private string PromptForInaraKey()
+        private string PromptForKey()
         {
-            _outputWriter?.WriteLine("Enter your INARA API Key:");
-            _outputWriter?.WriteLine("(Get it from: https://inara.cz/account/settings/)");
+            _outputWriter?.WriteLine("Enter your authentication key:");
+            _outputWriter?.WriteLine("(Format: KEY-CMDR[ID]-[CHECKSUM])");
             _outputWriter?.WriteLine("");
 
             // Read key from console
             Console.Write("> ");
-            var apiKey = Console.ReadLine()?.Trim();
+            var key = Console.ReadLine()?.Trim();
 
-            if (string.IsNullOrWhiteSpace(apiKey))
+            if (string.IsNullOrWhiteSpace(key))
             {
-                _outputWriter?.WriteLine("ERROR: API key cannot be empty");
-                throw new InvalidOperationException("API key required");
+                _outputWriter?.WriteLine("ERROR: Key cannot be empty");
+                throw new InvalidOperationException("Key required");
             }
 
-            return apiKey;
+            return key;
         }
 
         /// <summary>

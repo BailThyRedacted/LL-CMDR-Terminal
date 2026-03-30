@@ -22,3 +22,11 @@ Thumbs.db
 # Dependencies
 .nuget/
 packages/
+
+# PRIVATE: Key Generator Utility (DO NOT COMMIT)
+KeyGen/
+EliteDataCollector/KeyGen/
+!EliteDataCollector/KeyGen/.gitkeep
+keys_*.txt
+test_input.txt
+test_output.txt

@@ -10,7 +10,7 @@ namespace EliteDataCollector.Host
     /// <summary>
     /// Elite Data Collector - Main Entry Point
     ///
-    /// Handles INARA authentication and module configuration
+    /// Handles local key authentication and module configuration
     /// before starting the main application.
     /// </summary>
     class Program
@@ -31,7 +31,7 @@ namespace EliteDataCollector.Host
                 services.AddSingleton(configuration);
                 services.AddSingleton<OutputWriter, ConsoleOutputWriter>();
                 services.AddSingleton<SettingsManager, SettingsManagerImpl>();
-                services.AddHttpClient<InaraAuth, InaraAuthImpl>();
+                services.AddSingleton<KeyValidator, KeyValidatorImpl>();
                 services.AddSingleton<SupabaseClient>(sp =>
                     new SupabaseClientImpl(configuration, sp.GetRequiredService<OutputWriter>()));
                 services.AddSingleton<SetupConsole>();
