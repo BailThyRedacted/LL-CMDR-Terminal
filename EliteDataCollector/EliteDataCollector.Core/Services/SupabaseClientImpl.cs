@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using EliteDataCollector.Core.Models;
 using Microsoft.Extensions.Configuration;
@@ -27,18 +31,35 @@ namespace EliteDataCollector.Core.Services
 
         private const string CONFIG_SECTION = "Supabase";
         private const string CONFIG_URL = "Url";
-        private const string CONFIG_KEY = "ApiKey";
+        private const string CONFIG_KEY = "PublishableKey";
+
+        // Retry configuration
+        private const int MAX_RETRIES = 3;
+        private const int RETRY_DELAY_MS_1 = 1000;    // 1 second
+        private const int RETRY_DELAY_MS_2 = 2000;    // 2 seconds
+        private const int RETRY_DELAY_MS_3 = 4000;    // 4 seconds
+
+        // JSON serialization options
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = false,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
 
         // ========== CONFIGURATION FIELDS ==========
 
         /// <summary>Supabase project URL (e.g., https://abc123.supabase.co)</summary>
         private readonly string _supabaseUrl;
 
-        /// <summary>Supabase API key for authentication</summary>
+        /// <summary>Supabase publishable key for authentication</summary>
         private readonly string _supabaseKey;
 
         /// <summary>Optional output writer for logging operations and errors</summary>
         private readonly OutputWriter? _outputWriter;
+
+        /// <summary>Settings manager to retrieve user context (CMDR name, Windows username)</summary>
+        private readonly SettingsManager? _settingsManager;
 
         // ========== CONSTRUCTOR ==========
 
@@ -58,10 +79,12 @@ namespace EliteDataCollector.Core.Services
         /// - Follows dependency injection best practices
         /// </summary>
         /// <param name="configuration">Configuration provider (reads appsettings.json)</param>
+        /// <param name="settingsManager">Settings manager for user context (CMDR name)</param>
         /// <param name="outputWriter">Optional logger for debugging</param>
-        public SupabaseClientImpl(IConfiguration configuration, OutputWriter? outputWriter = null)
+        public SupabaseClientImpl(IConfiguration configuration, SettingsManager? settingsManager = null, OutputWriter? outputWriter = null)
         {
             _outputWriter = outputWriter;
+            _settingsManager = settingsManager;
 
             // Read Supabase configuration from appsettings.json
             var supabaseConfig = configuration.GetSection(CONFIG_SECTION);
@@ -98,30 +121,48 @@ namespace EliteDataCollector.Core.Services
         /// - JSON deserialization
         /// - Try-catch error handling (never throw from service)
         /// - Logging for observability
+        /// - Retry logic with exponential backoff
         /// </summary>
         public async Task<List<string>> GetTargetSystemsAsync()
         {
-            try
+            if (!IsConfigured())
+            {
+                _outputWriter?.WriteLine("ERROR: Supabase not configured. Skipping GetTargetSystems.");
+                return new List<string>();
+            }
+
+            return await RetryAsync(async () =>
             {
                 _outputWriter?.WriteLine("Fetching target systems from Supabase...");
 
-                // TODO: Implement actual Supabase REST API call
-                // For now, return empty list (mock implementation)
-                // Production would use:
-                // using HttpClient client = new();
-                // string url = $"{_supabaseUrl}/rest/v1/target_systems?select=name";
-                // var response = await client.GetAsync(url);
-                // var json = await response.Content.ReadAsStringAsync();
-                // var systems = JsonSerializer.Deserialize<List<string>>(json);
+                using HttpClient client = new();
+                string url = $"{_supabaseUrl}/rest/v1/target_systems?select=name";
+                
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                AddAuthHeaders(request);
 
-                _outputWriter?.WriteLine("Target systems fetched successfully.");
-                return new List<string>();
-            }
-            catch (Exception ex)
-            {
-                _outputWriter?.WriteLine($"ERROR fetching target systems: {ex.Message}");
-                return new List<string>();  // Graceful degradation: return empty list
-            }
+                var response = await client.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _outputWriter?.WriteLine($"ERROR: Auth failed fetching target systems: {response.StatusCode}");
+                    return new List<string>();  // Don't retry auth errors
+                }
+
+                response.EnsureSuccessStatusCode();
+                var json = await response.Content.ReadAsStringAsync();
+                
+                // Parse JSON array of objects: [{"name": "Sol"}, {"name": "Alpha Centauri"}]
+                var systems = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(json, JsonOptions) ?? new();
+                var systemNames = systems
+                    .Select(s => s.ContainsKey("name") ? s["name"].GetString() ?? "" : "")
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+
+                _outputWriter?.WriteLine($"Target systems fetched successfully: {systemNames.Count} systems");
+                return systemNames;
+            });
         }
 
         /// <summary>
@@ -138,30 +179,72 @@ namespace EliteDataCollector.Core.Services
         /// - JSON serialization of complex objects
         /// - Try-catch with no throws (background safety)
         /// - Logging for debugging
+        /// - Retry logic with exponential backoff
+        /// - User context (user_id) for RLS filtering
         /// </summary>
         public async Task UpsertSystemDataAsync(SystemData systemData)
         {
-            try
+            if (!IsConfigured())
+            {
+                _outputWriter?.WriteLine("ERROR: Supabase not configured. Skipping UpsertSystemData.");
+                return;
+            }
+
+            if (systemData == null)
+            {
+                _outputWriter?.WriteLine("ERROR: SystemData is null. Skipping UpsertSystemData.");
+                return;
+            }
+
+            await RetryAsync(async () =>
             {
                 _outputWriter?.WriteLine(
                     $"Upserting system data: {systemData.SystemName} " +
-                    $"(Factions: {systemData.Factions?.Count ?? 0})");
+                    $"(Factions: {systemData.Factions?.Count ?? 0}, Structures: {systemData.Structures?.Count ?? 0})");
 
-                // TODO: Implement actual Supabase REST API call
-                // Production would use:
-                // using HttpClient client = new();
-                // string url = $"{_supabaseUrl}/rest/v1/systems?on_conflict=id";
-                // var json = JsonSerializer.Serialize(systemData);
-                // var content = new StringContent(json, Encoding.UTF8, "application/json");
-                // var response = await client.PostAsync(url, content);
+                using HttpClient client = new();
+                
+                // Set timestamp to now
+                systemData.Timestamp = DateTime.UtcNow;
+                
+                // Add user_id for RLS filtering
+                string userId = await GetUserIdAsync();
+                
+                // Create request body with user_id
+                var requestBody = new
+                {
+                    systemData.Id,
+                    systemData.SystemName,
+                    systemData.Timestamp,
+                    systemData.ControllingFaction,
+                    systemData.Power,
+                    systemData.PowerState,
+                    systemData.LavignyInfluence,
+                    user_id = userId
+                };
 
+                string json = JsonSerializer.Serialize(requestBody, JsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                string url = $"{_supabaseUrl}/rest/v1/system_data?on_conflict=id";
+                var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+                AddAuthHeaders(request);
+                request.Headers.Add("Prefer", "resolution=merge-duplicates");  // Upsert mode
+                request.Headers.Add("X-User-Id", userId);  // For RLS filtering
+
+                var response = await client.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _outputWriter?.WriteLine($"ERROR: Auth failed upserting system data: {response.StatusCode}");
+                    return new List<string>();  // Don't retry auth errors
+                }
+
+                response.EnsureSuccessStatusCode();
                 _outputWriter?.WriteLine("System data upserted successfully.");
-            }
-            catch (Exception ex)
-            {
-                _outputWriter?.WriteLine($"ERROR upserting system data: {ex.Message}");
-                // Don't throw - background processing should continue
-            }
+                return new List<string>();
+            });
         }
 
         /// <summary>
@@ -169,48 +252,198 @@ namespace EliteDataCollector.Core.Services
         ///
         /// Teaching: Batch upsert pattern
         /// - Upload multiple structures in one operation
-        /// - Each structure identified by (system_id, structure_name) composite key
-        /// - Update progress and timestamps
+        /// - Each structure identified by system_id
+        /// - Include user_id for RLS filtering
         /// - Handle errors gracefully
         ///
         /// Curriculum: This demonstrates:
         /// - Handling collections of objects
         /// - Batch operations vs. individual calls
         /// - Error handling in collection processing
+        /// - Retry logic with exponential backoff
         /// </summary>
         public async Task UpsertStructuresAsync(long systemAddress, List<Structure> structures)
         {
-            try
+            if (!IsConfigured())
+            {
+                _outputWriter?.WriteLine("ERROR: Supabase not configured. Skipping UpsertStructures.");
+                return;
+            }
+
+            if (structures == null || structures.Count == 0)
+            {
+                _outputWriter?.WriteLine($"No structures to upsert for system {systemAddress}.");
+                return;
+            }
+
+            await RetryAsync(async () =>
             {
                 _outputWriter?.WriteLine(
                     $"Upserting structures for system {systemAddress}: {structures.Count} structures");
 
-                // TODO: Implement actual Supabase REST API call
-                // Production would use:
-                // using HttpClient client = new();
-                // string url = $"{_supabaseUrl}/rest/v1/structures?on_conflict=system_id,name";
-                // var json = JsonSerializer.Serialize(structures);
-                // var content = new StringContent(json, Encoding.UTF8, "application/json");
-                // var response = await client.PostAsync(url, content);
+                using HttpClient client = new();
+                
+                // Add user_id for RLS filtering
+                string userId = await GetUserIdAsync();
+                
+                // Create request body with user_id for each structure
+                var requestBody = structures.Select(s => new
+                {
+                    id = Guid.NewGuid(),
+                    system_id = systemAddress,
+                    structure_type = s.Type ?? "",
+                    structure_name = s.Name ?? "",
+                    progress_percent = s.ProgressPercent,
+                    user_id = userId,
+                    created_at = DateTime.UtcNow
+                }).ToList();
 
+                string json = JsonSerializer.Serialize(requestBody, JsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                string url = $"{_supabaseUrl}/rest/v1/structures";
+                var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+                AddAuthHeaders(request);
+                request.Headers.Add("X-User-Id", userId);  // For RLS filtering
+
+                var response = await client.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _outputWriter?.WriteLine($"ERROR: Auth failed upserting structures: {response.StatusCode}");
+                    return new List<string>();  // Don't retry auth errors
+                }
+
+                response.EnsureSuccessStatusCode();
                 _outputWriter?.WriteLine("Structures upserted successfully.");
-            }
-            catch (Exception ex)
-            {
-                _outputWriter?.WriteLine($"ERROR upserting structures: {ex.Message}");
-                // Don't throw - background processing should continue
-            }
+                return new List<string>();
+            });
         }
 
         // ========== PRIVATE HELPER METHODS ==========
 
         /// <summary>
         /// Helper to validate Supabase is properly configured.
-        /// Returns true only if both URL and API Key are present and non-empty.
+        /// Returns true only if both URL and publishable key are present and non-empty.
         /// </summary>
         private bool IsConfigured()
         {
             return !string.IsNullOrWhiteSpace(_supabaseUrl) && !string.IsNullOrWhiteSpace(_supabaseKey);
+        }
+
+        /// <summary>
+        /// Adds authentication headers to HTTP request.
+        /// Supabase uses Bearer token authentication with the publishable key.
+        /// </summary>
+        private void AddAuthHeaders(HttpRequestMessage request)
+        {
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _supabaseKey);
+            request.Headers.Add("apikey", _supabaseKey);  // Supabase also accepts apikey header
+        }
+
+        /// <summary>
+        /// Extracts user ID from Windows username and optional CMDR name.
+        /// Priority: CMDR Name (if available) → Windows Username (fallback)
+        /// Both are joined for uniqueness across systems.
+        /// </summary>
+        private async Task<string> GetUserIdAsync()
+        {
+            try
+            {
+                string windowsUser = Environment.UserName;
+                string cmdrName = "";
+
+                // Try to get CMDR name from SettingsManager
+                if (_settingsManager != null)
+                {
+                    try
+                    {
+                        var settings = await _settingsManager.LoadAsync();
+                        cmdrName = settings?.CommanderName ?? "";
+                    }
+                    catch (Exception ex)
+                    {
+                        _outputWriter?.WriteLine($"WARNING: Could not load CMDR name from settings: {ex.Message}");
+                    }
+                }
+
+                // Use CMDR name if available, otherwise Windows username
+                string userId = !string.IsNullOrWhiteSpace(cmdrName) ? cmdrName : windowsUser;
+                
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    _outputWriter?.WriteLine("WARNING: Could not determine user ID. Using 'unknown'.");
+                    userId = "unknown";
+                }
+
+                _outputWriter?.WriteLine($"User ID resolved to: {userId}");
+                return userId;
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"ERROR extracting user ID: {ex.Message}. Using 'unknown'.");
+                return "unknown";
+            }
+        }
+
+        /// <summary>
+        /// Generic retry helper with exponential backoff.
+        /// Attempts operation up to MAX_RETRIES (3) times with increasing delays.
+        /// Does NOT retry on auth errors (401/403).
+        /// Returns empty list on all errors (graceful degradation).
+        /// </summary>
+        private async Task<List<string>> RetryAsync(Func<Task<List<string>>> operation)
+        {
+            int attempt = 0;
+            int[] delays = { RETRY_DELAY_MS_1, RETRY_DELAY_MS_2, RETRY_DELAY_MS_3 };
+
+            while (attempt < MAX_RETRIES)
+            {
+                try
+                {
+                    return await operation();
+                }
+                catch (HttpRequestException ex) when (ex.InnerException is System.Net.Http.HttpRequestException)
+                {
+                    // Network error - check if it's auth-related
+                    if (ex.Message.Contains("401") || ex.Message.Contains("403"))
+                    {
+                        _outputWriter?.WriteLine($"ERROR: Auth failure (attempt {attempt + 1}): {ex.Message}");
+                        return new List<string>();  // Don't retry auth errors
+                    }
+
+                    attempt++;
+                    if (attempt < MAX_RETRIES)
+                    {
+                        int delayMs = delays[attempt - 1];
+                        _outputWriter?.WriteLine($"Transient error (attempt {attempt}). Retrying in {delayMs}ms: {ex.Message}");
+                        await Task.Delay(delayMs);
+                    }
+                    else
+                    {
+                        _outputWriter?.WriteLine($"ERROR: Max retries ({MAX_RETRIES}) exceeded: {ex.Message}");
+                        return new List<string>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    attempt++;
+                    if (attempt < MAX_RETRIES)
+                    {
+                        int delayMs = delays[attempt - 1];
+                        _outputWriter?.WriteLine($"Error (attempt {attempt}). Retrying in {delayMs}ms: {ex.Message}");
+                        await Task.Delay(delayMs);
+                    }
+                    else
+                    {
+                        _outputWriter?.WriteLine($"ERROR: Max retries ({MAX_RETRIES}) exceeded: {ex.Message}");
+                        return new List<string>();
+                    }
+                }
+            }
+
+            return new List<string>();
         }
     }
 }

@@ -249,7 +249,52 @@ If your Elite Dangerous is installed elsewhere, check this folder exists.
 2. Create table in Supabase with required schema
 3. Add system names to the table
 
-### "Nothing in console, app seems stuck"
+### Auto-Update Notifications
+
+**When does the app check for updates?**
+The app checks for new releases on startup. If a new version is available on GitHub, you'll see:
+```
+========================================
+  UPDATE AVAILABLE
+========================================
+Current Version: 1.0.0
+Latest Version:  1.1.0
+Release Date:    2026-04-10
+
+Release Notes:
+---------
+- Fixed exobiology scoring
+- Added new planet alerts
+---------
+
+Update will be installed when you stop playing (app becomes idle).
+[Y]es - Install now / [L]ater - Ask again tomorrow / [D]isable auto-update
+```
+
+**What happens after you say "Yes"?**
+1. Download starts when you stop playing (to avoid interrupting gameplay)
+2. A backup of the current version is created in: `%APPDATA%\EliteDangerousDataCollector\backups\`
+3. The new version is installed
+4. App restarts automatically
+
+**Can I disable auto-update?**
+Yes. When prompted for an update, press `D` to disable auto-update checks. You can re-enable it later by editing:
+```
+%APPDATA%\EliteDangerousDataCollector\settings.json
+```
+Change `"auto_update_enabled": false` to `"auto_update_enabled": true`
+
+**How do I rollback to the previous version?**
+If an update causes problems, backups are stored in:
+```
+%APPDATA%\EliteDangerousDataCollector\backups\
+```
+The app keeps the last 3 versions. You can manually restore from a backup or contact support for help.
+
+**"Update check failed" or "No internet connection"?**
+The app gracefully handles network issues. It will try again on the next startup. You can continue using the app offline normally.
+
+### Nothing in console, app seems stuck
 **Check:**
 1. Is Elite Dangerous running? App waits for game launch
 2. Is there a journal file being written? Check size of latest Journal.*.log in Logs folder

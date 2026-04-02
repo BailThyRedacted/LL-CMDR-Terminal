@@ -37,6 +37,30 @@ namespace EliteDataCollector.Core.Services
         /// <summary>Whether first-time setup has completed</summary>
         [JsonPropertyName("setup_complete")]
         public bool SetupComplete { get; set; }
+
+        /// <summary>Current installed version (e.g., "1.0.0")</summary>
+        [JsonPropertyName("installed_version")]
+        public string InstalledVersion { get; set; } = "1.0.0";
+
+        /// <summary>Last time update check was performed</summary>
+        [JsonPropertyName("last_update_check")]
+        public DateTime LastUpdateCheck { get; set; } = DateTime.MinValue;
+
+        /// <summary>Whether auto-update checking is enabled</summary>
+        [JsonPropertyName("auto_update_enabled")]
+        public bool AutoUpdateEnabled { get; set; } = true;
+
+        /// <summary>Number of backups to retain for rollback</summary>
+        [JsonPropertyName("backup_retention_count")]
+        public int BackupRetentionCount { get; set; } = 3;
+
+        /// <summary>Pending update version awaiting installation</summary>
+        [JsonPropertyName("pending_update_version")]
+        public string? PendingUpdateVersion { get; set; } = null;
+
+        /// <summary>User's choice for pending update (Yes/Later/No)</summary>
+        [JsonPropertyName("pending_update_choice")]
+        public string? PendingUpdateChoice { get; set; } = null;
     }
 
     /// <summary>

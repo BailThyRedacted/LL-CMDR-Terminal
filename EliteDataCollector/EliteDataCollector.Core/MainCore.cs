@@ -39,6 +39,9 @@ namespace EliteDataCollector.Core
 
         private readonly GameProcessMonitor _gameMonitor;
         private readonly JournalMonitor _journalMonitor;
+        private readonly UpdateService? _updateService;
+        private readonly UpdateDownloader? _updateDownloader;
+        private readonly IdleDetector? _idleDetector;
         private readonly OutputWriter? _outputWriter;
 
         // ====================================================================
@@ -68,6 +71,9 @@ namespace EliteDataCollector.Core
         /// - gameMonitor: Detects when game launches/exits
         /// - journalMonitor: Reads game journal events
         /// - outputWriter: Logs messages (can be null for silent mode)
+        /// - updateService: Checks for app updates from GitHub (optional)
+        /// - updateDownloader: Downloads and installs updates (optional)
+        /// - idleDetector: Detects idle periods for seamless restart (optional)
         ///
         /// WHY DEPENDENCY INJECTION?
         /// - Tests can pass mock objects instead of real services
@@ -78,14 +84,20 @@ namespace EliteDataCollector.Core
         public MainCore(
             GameProcessMonitor gameMonitor,
             JournalMonitor journalMonitor,
-            OutputWriter? outputWriter = null)
+            OutputWriter? outputWriter = null,
+            UpdateService? updateService = null,
+            UpdateDownloader? updateDownloader = null,
+            IdleDetector? idleDetector = null)
         {
             // Null-check required services
             _gameMonitor = gameMonitor ?? throw new ArgumentNullException(nameof(gameMonitor));
             _journalMonitor = journalMonitor ?? throw new ArgumentNullException(nameof(journalMonitor));
 
-            // OutputWriter is optional (null is OK for silent operation)
+            // OutputWriter and optional update services
             _outputWriter = outputWriter;
+            _updateService = updateService;
+            _updateDownloader = updateDownloader;
+            _idleDetector = idleDetector;
         }
 
         // ====================================================================
@@ -122,6 +134,143 @@ namespace EliteDataCollector.Core
         // ====================================================================
 
         /// <summary>
+        /// Checks for app updates on startup.
+        /// Runs asynchronously in the background without blocking initialization.
+        /// </summary>
+        private async void CheckForUpdatesAsync()
+        {
+            if (_updateService == null)
+            {
+                _outputWriter?.WriteLine("[MainCore] Update service not configured, skipping update check", LogLevel.Debug);
+                return;
+            }
+
+            try
+            {
+                var updateInfo = await _updateService.CheckForUpdatesAsync();
+                
+                if (updateInfo != null)
+                {
+                    _outputWriter?.WriteLine("");
+                    _outputWriter?.WriteLine("========================================");
+                    _outputWriter?.WriteLine("  UPDATE AVAILABLE");
+                    _outputWriter?.WriteLine("========================================");
+                    _outputWriter?.WriteLine($"Current Version: {_updateService.GetCurrentVersion()}");
+                    _outputWriter?.WriteLine($"Latest Version:  {updateInfo.LatestVersion}");
+                    _outputWriter?.WriteLine($"Release Date:    {updateInfo.ReleaseDate:yyyy-MM-dd}");
+                    _outputWriter?.WriteLine("");
+                    _outputWriter?.WriteLine("Release Notes:");
+                    _outputWriter?.WriteLine("---------");
+                    _outputWriter?.WriteLine(updateInfo.ReleaseNotes);
+                    _outputWriter?.WriteLine("---------");
+                    _outputWriter?.WriteLine("");
+                    _outputWriter?.WriteLine("Update will be installed when you stop playing (app becomes idle).");
+                    _outputWriter?.WriteLine("[Y]es - Install now / [L]ater - Ask again tomorrow / [D]isable auto-update");
+                    _outputWriter?.WriteLine("");
+
+                    // Wait for user response
+                    string? response = Console.ReadLine();
+
+                    if (response?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true || 
+                        response?.Equals("Yes", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        _outputWriter?.WriteLine("[MainCore] User approved update. Scheduling download for idle time...");
+                        
+                        // Schedule download on idle
+                        if (_idleDetector != null)
+                        {
+                            _idleDetector.OnBecomeIdle(async () =>
+                            {
+                                await PerformUpdateAsync(updateInfo);
+                            });
+                        }
+                        else if (_updateDownloader != null)
+                        {
+                            // No idle detector, download immediately
+                            await PerformUpdateAsync(updateInfo);
+                        }
+                    }
+                    else if (response?.Equals("D", StringComparison.OrdinalIgnoreCase) == true ||
+                             response?.Equals("Disable", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        _outputWriter?.WriteLine("[MainCore] User disabled auto-update");
+                    }
+                    else
+                    {
+                        _outputWriter?.WriteLine("[MainCore] User deferred update check");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"[MainCore] Error checking for updates: {ex.Message}", LogLevel.Debug);
+            }
+        }
+
+        /// <summary>
+        /// Performs the update download and installation.
+        /// </summary>
+        private async Task PerformUpdateAsync(UpdateInfo updateInfo)
+        {
+            try
+            {
+                if (_updateDownloader == null)
+                {
+                    _outputWriter?.WriteLine("[MainCore] Update downloader not configured");
+                    return;
+                }
+
+                _outputWriter?.WriteLine("");
+                _outputWriter?.WriteLine("========================================");
+                _outputWriter?.WriteLine("  INSTALLING UPDATE");
+                _outputWriter?.WriteLine("========================================");
+                _outputWriter?.WriteLine($"Downloading {updateInfo.LatestVersion}...");
+                
+                // Download update
+                bool downloadSuccess = await _updateDownloader.DownloadUpdateAsync(updateInfo.DownloadUrl, updateInfo.LatestVersion);
+                
+                if (!downloadSuccess)
+                {
+                    _outputWriter?.WriteLine("[MainCore] Download failed. Please try again later.");
+                    return;
+                }
+
+                // Find the downloaded MSI
+                string updatesDir = _updateDownloader.GetUpdatesDirectory();
+                string[] msiFiles = System.IO.Directory.GetFiles(updatesDir, "*.msi");
+                
+                if (msiFiles.Length == 0)
+                {
+                    _outputWriter?.WriteLine("[MainCore] Downloaded MSI file not found");
+                    return;
+                }
+
+                // Install update
+                _outputWriter?.WriteLine("Installing update...");
+                bool installSuccess = await _updateDownloader.InstallUpdateAsync(msiFiles[msiFiles.Length - 1]);
+
+                if (installSuccess)
+                {
+                    _outputWriter?.WriteLine("[MainCore] Update installed successfully");
+                    _outputWriter?.WriteLine("[MainCore] The application will restart to complete the update");
+                    _outputWriter?.WriteLine("Press any key to restart...");
+                    Console.ReadKey();
+                    
+                    // Restart the application
+                    System.Diagnostics.Process.Start(System.Reflection.Assembly.GetExecutingAssembly().Location ?? "EliteDataCollector.Host.exe");
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    _outputWriter?.WriteLine("[MainCore] Installation failed");
+                }
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"[MainCore] Error during update: {ex.Message}");
+            }
+        }
+
         /// Initializes the orchestrator and all services.
         ///
         /// WHAT IT DOES:
@@ -164,6 +313,9 @@ namespace EliteDataCollector.Core
                 _outputWriter?.WriteLine("  - Starting game process monitor...");
                 await _gameMonitor.StartAsync();
 
+                // STEP 3: Check for updates (fire-and-forget, doesn't block initialization)
+                _outputWriter?.WriteLine("  - Checking for updates...");
+                CheckForUpdatesAsync();
 
                 // STEP 4: Mark as initialized
                 _isInitialized = true;

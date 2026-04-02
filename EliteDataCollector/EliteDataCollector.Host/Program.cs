@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using EliteDataCollector.Core;
 using EliteDataCollector.Core.Services;
@@ -66,6 +67,28 @@ namespace EliteDataCollector.Host
                 services.AddSingleton<JournalMonitor>(sp =>
                     new JournalMonitorImpl(sp.GetRequiredService<OutputWriter>()));
 
+                // TEACHING NOTE - Auto-Update Services:
+                // These services handle checking for, downloading, and installing updates from GitHub.
+                services.AddHttpClient();
+                services.AddSingleton<UpdateService>(sp =>
+                {
+                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+                    var gitHubRepo = configuration["UpdateCheck:GitHubRepository"] ?? "your-username/EliteDataCollector";
+                    var currentVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.0.0";
+                    return new UpdateServiceImpl(httpClient, sp.GetRequiredService<OutputWriter>(), gitHubRepo, currentVersion);
+                });
+
+                services.AddSingleton<UpdateDownloader>(sp =>
+                {
+                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+                    var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EliteDangerousDataCollector");
+                    return new UpdateDownloaderImpl(httpClient, sp.GetRequiredService<OutputWriter>(), appDataPath, maxBackupRetention: 3);
+                });
+
+                services.AddSingleton<IdleDetector>(sp =>
+                    new IdleDetectorImpl(sp.GetRequiredService<GameProcessMonitor>(), sp.GetRequiredService<OutputWriter>()));
+
+
                 var serviceProvider = services.BuildServiceProvider();
 
                 var outputWriter = serviceProvider.GetRequiredService<OutputWriter>();
@@ -87,8 +110,17 @@ namespace EliteDataCollector.Host
                 // ===== INITIALIZE MAINCORE =====
                 var gameMonitor = serviceProvider.GetRequiredService<GameProcessMonitor>();
                 var journalMonitor = serviceProvider.GetRequiredService<JournalMonitor>();
+                var updateService = serviceProvider.GetRequiredService<UpdateService>();
+                var updateDownloader = serviceProvider.GetRequiredService<UpdateDownloader>();
+                var idleDetector = serviceProvider.GetRequiredService<IdleDetector>();
 
-                var mainCore = new MainCore(gameMonitor, journalMonitor, outputWriter: outputWriter);
+                var mainCore = new MainCore(
+                    gameMonitor,
+                    journalMonitor,
+                    outputWriter: outputWriter,
+                    updateService: updateService,
+                    updateDownloader: updateDownloader,
+                    idleDetector: idleDetector);
                 mainCore.SetCommanderContext(1, settings.CommanderName);
                 mainCore.SetModulePreferences(settings.Modules);
 
