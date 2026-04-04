@@ -1,100 +1,112 @@
 @echo off
-REM Elite Data Collector Installer
-REM Usage: install.bat [options]
-
 setlocal enabledelayedexpansion
 
-REM Define installation paths
-if "%ProgramFiles(x86)%" neq "" (
-    set "INSTALL_PATH=%ProgramFiles(x86)%\Elite Data Collector"
-) else (
-    set "INSTALL_PATH=%ProgramFiles%\Elite Data Collector"
-)
-
-set "SOURCE_PATH=%~dp0"
+set "APP_NAME=Elite Data Collector"
+set "APP_VERSION=2.1.0.0"
+set "APP_EXE=EliteDataCollector.Host.exe"
+set "SCRIPT_DIR=%~dp0"
+set "PROJECT_FILE=%SCRIPT_DIR%..\EliteDataCollector.Host\EliteDataCollector.Host.csproj"
+set "PUBLISH_DIR=%SCRIPT_DIR%publish"
+set "INSTALL_PATH=%ProgramFiles%\Elite Data Collector"
 
 echo.
 echo ========================================
-echo Elite Data Collector - Installation
+echo  %APP_NAME% v%APP_VERSION% - Installer
 echo ========================================
 echo.
-echo Installing to: %INSTALL_PATH%
-echo.
 
-REM Create installation directory
-if not exist "%INSTALL_PATH%" (
-    mkdir "%INSTALL_PATH%"
-    echo [OK] Created installation directory
-) else (
-    echo [INFO] Installation directory already exists
+REM ── Step 1: UAC self-elevation ─────────────────────────────────────────────
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo  Administrator rights required. Requesting elevation...
+    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs -Wait"
+    exit /b
 )
 
-REM Copy application files
-echo Copying application files...
-xcopy /E /I /Y "%SOURCE_PATH%bin\Release\net10.0-windows\*" "%INSTALL_PATH%\" >nul 2>&1
-
-if %errorlevel% equ 0 (
-    echo [OK] Application files copied
-) else (
-    echo [ERROR] Failed to copy application files
+REM ── Step 2: Verify dotnet SDK is available ─────────────────────────────────
+where dotnet >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] The .NET SDK was not found on PATH.
+    echo         Download it from: https://dot.net/download
+    echo.
     pause
     exit /b 1
 )
 
-REM Create Start Menu shortcut
-echo Creating Start Menu shortcut...
-set "APPDATA_PATH=%APPDATA%\Microsoft\Windows\Start Menu\Programs"
-if not exist "%APPDATA_PATH%\Elite Data Collector" (
-    mkdir "%APPDATA_PATH%\Elite Data Collector"
+REM ── Step 3: Publish self-contained application ─────────────────────────────
+echo [1/4] Building self-contained package...
+dotnet publish "%PROJECT_FILE%" ^
+    --configuration Release ^
+    --runtime win-x64 ^
+    --self-contained true ^
+    --output "%PUBLISH_DIR%" ^
+    -p:PublishSingleFile=false ^
+    /nologo /consoleloggerparameters:ErrorsOnly
+
+if %errorlevel% neq 0 (
+    echo [ERROR] Build failed. See output above for details.
+    echo.
+    pause
+    exit /b 1
+)
+echo [OK]   Build complete
+
+REM ── Step 4: Install files ──────────────────────────────────────────────────
+echo [2/4] Installing to %INSTALL_PATH%...
+if not exist "%INSTALL_PATH%" mkdir "%INSTALL_PATH%"
+
+robocopy "%PUBLISH_DIR%" "%INSTALL_PATH%" /E /NJH /NJS /NFL /NDL >nul
+if %errorlevel% geq 8 (
+    echo [ERROR] Failed to copy application files (robocopy error %errorlevel%).
+    echo.
+    pause
+    exit /b 1
 )
 
-REM Create shortcut using VBScript (requires Windows Script Host)
-call :createShortcut "%APPDATA_PATH%\Elite Data Collector\Elite Data Collector.lnk" "%INSTALL_PATH%\EliteDataCollector.Host.exe" "%INSTALL_PATH%"
+REM Copy uninstaller tools so Add/Remove Programs entry works standalone
+copy /y "%SCRIPT_DIR%uninstall.bat"      "%INSTALL_PATH%\uninstall.bat"      >nul
+copy /y "%SCRIPT_DIR%createShortcut.vbs" "%INSTALL_PATH%\createShortcut.vbs" >nul
+echo [OK]   Files installed
 
-REM Create Desktop shortcut
-call :createShortcut "%USERPROFILE%\Desktop\Elite Data Collector.lnk" "%INSTALL_PATH%\EliteDataCollector.Host.exe" "%INSTALL_PATH%"
+REM ── Step 5: Create shortcuts ───────────────────────────────────────────────
+echo [3/4] Creating shortcuts...
 
-REM Add to Programs and Features uninstaller registry
-echo Adding to Programs and Features...
-setlocal enabledelayedexpansion
-for /f "delims=" %%i in ('wmic os get currentversion /value ^| find "="') do set "WINVER=%%i"
-set "REGPATH=HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Data Collector"
+set "START_MENU=%ProgramData%\Microsoft\Windows\Start Menu\Programs\%APP_NAME%"
+if not exist "%START_MENU%" mkdir "%START_MENU%"
 
-REM Create Add/Remove Programs entry
-reg add "%REGPATH%" /v "DisplayName" /d "Elite Data Collector" /f >nul 2>&1
-reg add "%REGPATH%" /v "DisplayVersion" /d "1.0.0.0" /f >nul 2>&1
-reg add "%REGPATH%" /v "InstallLocation" /d "%INSTALL_PATH%" /f >nul 2>&1
-reg add "%REGPATH%" /v "UninstallString" /d "%INSTALL_PATH%\uninstall.bat" /f >nul 2>&1
+cscript //nologo "%INSTALL_PATH%\createShortcut.vbs" ^
+    "%START_MENU%\%APP_NAME%.lnk" ^
+    "%INSTALL_PATH%\%APP_EXE%" ^
+    "%INSTALL_PATH%" >nul 2>&1
+if %errorlevel% equ 0 (echo [OK]   Start Menu shortcut) else (echo [WARN] Start Menu shortcut failed)
+
+cscript //nologo "%INSTALL_PATH%\createShortcut.vbs" ^
+    "%PUBLIC%\Desktop\%APP_NAME%.lnk" ^
+    "%INSTALL_PATH%\%APP_EXE%" ^
+    "%INSTALL_PATH%" >nul 2>&1
+if %errorlevel% equ 0 (echo [OK]   Desktop shortcut) else (echo [WARN] Desktop shortcut failed)
+
+REM ── Step 6: Register with Add/Remove Programs (HKLM = system-wide) ─────────
+echo [4/4] Registering with Windows...
+set "REG_PATH=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\%APP_NAME%"
+
+reg add "%REG_PATH%" /v "DisplayName"     /d "%APP_NAME%"                        /f >nul 2>&1
+reg add "%REG_PATH%" /v "DisplayVersion"  /d "%APP_VERSION%"                     /f >nul 2>&1
+reg add "%REG_PATH%" /v "Publisher"       /d "LL CMDR Terminal"                  /f >nul 2>&1
+reg add "%REG_PATH%" /v "InstallLocation" /d "%INSTALL_PATH%"                    /f >nul 2>&1
+reg add "%REG_PATH%" /v "UninstallString" /d "\"%INSTALL_PATH%\uninstall.bat\""  /f >nul 2>&1
+reg add "%REG_PATH%" /v "NoModify"        /t REG_DWORD /d 1                      /f >nul 2>&1
+reg add "%REG_PATH%" /v "NoRepair"        /t REG_DWORD /d 1                      /f >nul 2>&1
+
+if %errorlevel% equ 0 (echo [OK]   Registered) else (echo [WARN] Registry write failed)
 
 echo.
 echo ========================================
-echo Installation Complete!
+echo  Installation complete!
 echo ========================================
 echo.
-echo Elite Data Collector has been successfully installed to:
-echo %INSTALL_PATH%
-echo.
-echo You can find shortcuts on your Desktop and Start Menu.
+echo  Location : %INSTALL_PATH%
+echo  Shortcuts: Desktop and Start Menu
 echo.
 pause
-exit /b 0
-
-REM Function to create shortcuts
-:createShortcut
-setlocal
-set "shortcutPath=%~1"
-set "targetPath=%~2"
-set "workingDir=%~3"
-
-if exist "!shortcutPath!" del "!shortcutPath!"
-
-cscript //nologo "%~dp0createShortcut.vbs" "!shortcutPath!" "!targetPath!" "!workingDir!" 2>nul
-
-if %errorlevel% equ 0 (
-    echo [OK] Shortcut created: !shortcutPath!
-) else (
-    echo [WARNING] Could not create shortcut: !shortcutPath!
-)
-
-endlocal
 exit /b 0

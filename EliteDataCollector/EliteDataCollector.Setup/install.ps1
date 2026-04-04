@@ -4,16 +4,20 @@
 EliteDataCollector Installation Script (PowerShell)
 
 .DESCRIPTION
-Installs Elite Data Collector with full system integration
+Publishes and installs Elite Data Collector with full system integration.
+Runs dotnet publish (self-contained, win-x64) then copies to Program Files.
 
 .PARAMETER InstallPath
-Installation directory (default: Program Files)
+Installation directory (default: Program Files\Elite Data Collector)
 
 .PARAMETER CreateDesktopShortcut
 Create desktop shortcut (default: $true)
 
 .PARAMETER CreateStartMenuShortcut
 Create Start Menu shortcut (default: $true)
+
+.PARAMETER SkipPrompt
+Skip the confirmation prompt (default: $false)
 #>
 
 param(
@@ -26,41 +30,64 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$AppName = "Elite Data Collector"
-$AppVersion = "1.0.0.0"
-$AppExecutable = "EliteDataCollector.Host.exe"
-$Manufacturer = "Elite Data Collector"
+$AppName        = "Elite Data Collector"
+$AppVersion     = "2.1.0.0"
+$AppExecutable  = "EliteDataCollector.Host.exe"
+$Manufacturer   = "LL CMDR Terminal"
 
 # Determine installation path
 if ([string]::IsNullOrEmpty($InstallPath)) {
-    if ([Environment]::Is64BitOperatingSystem) {
-        $InstallPath = Join-Path $env:ProgramFiles $AppName
-    } else {
-        $InstallPath = Join-Path ${env:ProgramFiles(x86)} $AppName
-    }
+    $InstallPath = Join-Path $env:ProgramFiles $AppName
 }
 
-# Get source directory (where this script is run from)
-$SourcePath = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Script and project locations
+$ScriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectFile = Join-Path $ScriptDir "..\EliteDataCollector.Host\EliteDataCollector.Host.csproj"
+$PublishDir  = Join-Path $ScriptDir "publish"
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "$AppName - Installation" -ForegroundColor Cyan
+Write-Host " $AppName v$AppVersion - Installer" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Version: $AppVersion"
-Write-Host "Source:  $SourcePath"
-Write-Host "Target:  $InstallPath"
+Write-Host "Target: $InstallPath"
 Write-Host ""
+
+# Verify dotnet SDK
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    Write-Host "[ERROR] dotnet SDK not found. Download from: https://dot.net/download" -ForegroundColor Red
+    exit 1
+}
 
 # Confirm installation
 if (-not $SkipPrompt) {
     $response = Read-Host "Continue with installation? (Y/N)"
-    if ($response -ne "Y" -and $response -ne "yes") {
+    if ($response -notmatch '^y(es)?$') {
         Write-Host "Installation cancelled."
         exit 0
     }
 }
+
+# Build self-contained package
+Write-Host "[1/4] Building self-contained package..." -ForegroundColor Cyan
+try {
+    $result = dotnet publish $ProjectFile `
+        --configuration Release `
+        --runtime win-x64 `
+        --self-contained true `
+        --output $PublishDir `
+        -p:PublishSingleFile=false `
+        /nologo /consoleloggerparameters:ErrorsOnly
+    if ($LASTEXITCODE -ne 0) { throw "dotnet publish exited with code $LASTEXITCODE" }
+    Write-Host "[OK]   Build complete" -ForegroundColor Green
+}
+catch {
+    Write-Host "[ERROR] Build failed: $_" -ForegroundColor Red
+    exit 1
+}
+
+# Source is now the publish output
+$SourcePath = $PublishDir
 
 # Create installation directory
 try {
@@ -77,18 +104,15 @@ catch {
 }
 
 # Copy application files
+Write-Host "[2/4] Installing to $InstallPath..." -ForegroundColor Cyan
 try {
-    Write-Host "Copying application files..."
-    Get-ChildItem -Path $SourcePath -Exclude "*.ps1", "*.bat", "*.vbs", "*.md", "*.wxs", "*.wixproj" | 
-        ForEach-Object {
-            if ($_.PSIsContainer) {
-                Copy-Item -Path $_.FullName -Destination $InstallPath -Recurse -Force
-            } else {
-                Copy-Item -Path $_.FullName -Destination $InstallPath -Force
-            }
-        }
-    
-    Write-Host "[OK] Application files copied" -ForegroundColor Green
+    Copy-Item -Path "$SourcePath\*" -Destination $InstallPath -Recurse -Force
+
+    # Copy uninstaller tools so the Add/Remove Programs entry works standalone
+    Copy-Item -Path (Join-Path $ScriptDir "uninstall.ps1")      -Destination $InstallPath -Force
+    Copy-Item -Path (Join-Path $ScriptDir "createShortcut.vbs") -Destination $InstallPath -Force
+
+    Write-Host "[OK]   Files installed" -ForegroundColor Green
 }
 catch {
     Write-Host "[ERROR] Failed to copy application files: $_" -ForegroundColor Red
@@ -96,8 +120,9 @@ catch {
 }
 
 # Create shortcuts
-$DesktopPath = [Environment]::GetFolderPath("Desktop")
-$StartMenuPath = [Environment]::GetFolderPath("StartMenu")
+Write-Host "[3/4] Creating shortcuts..." -ForegroundColor Cyan
+$DesktopPath    = [Environment]::GetFolderPath("CommonDesktopDirectory")
+$StartMenuPath  = [Environment]::GetFolderPath("CommonStartMenu")
 $AppShortcutDir = Join-Path $StartMenuPath "Programs\$AppName"
 
 function Create-Shortcut {
@@ -130,54 +155,58 @@ if ($CreateStartMenuShortcut) {
             New-Item -ItemType Directory -Path $AppShortcutDir -Force | Out-Null
         }
         $ShortcutPath = Join-Path $AppShortcutDir "$AppName.lnk"
-        $AppExePath = Join-Path $InstallPath $AppExecutable
-        Create-Shortcut -ShortcutPath $ShortcutPath -TargetPath $AppExePath -WorkingDirectory $InstallPath
-        Write-Host "[OK] Start Menu shortcut created" -ForegroundColor Green
+        $AppExePath   = Join-Path $InstallPath $AppExecutable
+        if (Create-Shortcut -ShortcutPath $ShortcutPath -TargetPath $AppExePath -WorkingDirectory $InstallPath) {
+            Write-Host "[OK]   Start Menu shortcut" -ForegroundColor Green
+        }
     }
     catch {
-        Write-Host "[WARNING] Failed to create Start Menu shortcut: $_" -ForegroundColor Yellow
+        Write-Host "[WARN] Failed to create Start Menu shortcut: $_" -ForegroundColor Yellow
     }
 }
 
 if ($CreateDesktopShortcut) {
     try {
         $ShortcutPath = Join-Path $DesktopPath "$AppName.lnk"
-        $AppExePath = Join-Path $InstallPath $AppExecutable
-        Create-Shortcut -ShortcutPath $ShortcutPath -TargetPath $AppExePath -WorkingDirectory $InstallPath
-        Write-Host "[OK] Desktop shortcut created" -ForegroundColor Green
+        $AppExePath   = Join-Path $InstallPath $AppExecutable
+        if (Create-Shortcut -ShortcutPath $ShortcutPath -TargetPath $AppExePath -WorkingDirectory $InstallPath) {
+            Write-Host "[OK]   Desktop shortcut" -ForegroundColor Green
+        }
     }
     catch {
-        Write-Host "[WARNING] Failed to create Desktop shortcut: $_" -ForegroundColor Yellow
+        Write-Host "[WARN] Failed to create Desktop shortcut: $_" -ForegroundColor Yellow
     }
 }
 
-# Add to registry (Add/Remove Programs)
+# Add to registry (Add/Remove Programs) — HKLM for system-wide install
+Write-Host "[4/4] Registering with Windows..." -ForegroundColor Cyan
 try {
-    $RegPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$AppName"
+    $RegPath       = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$AppName"
+    $UninstallCmd  = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$InstallPath\uninstall.ps1`""
     if (-not (Test-Path $RegPath)) {
         New-Item -Path $RegPath -Force | Out-Null
     }
-    
-    Set-ItemProperty -Path $RegPath -Name "DisplayName" -Value $AppName
-    Set-ItemProperty -Path $RegPath -Name "DisplayVersion" -Value $AppVersion
-    Set-ItemProperty -Path $RegPath -Name "Manufacturer" -Value $Manufacturer
+
+    Set-ItemProperty -Path $RegPath -Name "DisplayName"     -Value $AppName
+    Set-ItemProperty -Path $RegPath -Name "DisplayVersion"  -Value $AppVersion
+    Set-ItemProperty -Path $RegPath -Name "Publisher"       -Value $Manufacturer
     Set-ItemProperty -Path $RegPath -Name "InstallLocation" -Value $InstallPath
-    Set-ItemProperty -Path $RegPath -Name "UninstallString" -Value "$PSHOME\powershell.exe -NoProfile -Command `"Remove-Item -Recurse -Force '$InstallPath'`""
-    
-    Write-Host "[OK] Added to Add/Remove Programs" -ForegroundColor Green
+    Set-ItemProperty -Path $RegPath -Name "UninstallString" -Value $UninstallCmd
+    Set-ItemProperty -Path $RegPath -Name "NoModify"        -Value 1 -Type DWord
+    Set-ItemProperty -Path $RegPath -Name "NoRepair"        -Value 1 -Type DWord
+
+    Write-Host "[OK]   Registered" -ForegroundColor Green
 }
 catch {
-    Write-Host "[WARNING] Failed to add registry entries: $_" -ForegroundColor Yellow
+    Write-Host "[WARN] Failed to add registry entries: $_" -ForegroundColor Yellow
 }
 
 # Final message
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Installation Complete!" -ForegroundColor Cyan
+Write-Host " Installation complete!" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "$AppName has been installed to:" -ForegroundColor Green
-Write-Host $InstallPath -ForegroundColor Green
-Write-Host ""
-Write-Host "You can find shortcuts on your Desktop and Start Menu." -ForegroundColor Green
+Write-Host " Location : $InstallPath" -ForegroundColor Green
+Write-Host " Shortcuts: Desktop and Start Menu" -ForegroundColor Green
 Write-Host ""

@@ -1,53 +1,68 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Product 
-    Id="*"
+  <Package
     Name="Elite Data Collector"
     Language="1033"
-    Version="1.0.0.0"
-    Manufacturer="Elite Data Collector"
-    UpgradeCode="a1b2c3d4-e5f6-47g8-h9i0-j1k2l3m4n5o6">
+    Version="2.1.0.0"
+    Manufacturer="LL CMDR Terminal"
+    UpgradeCode="C3A4F2E1-8B7D-4E6F-A5C2-9D3F1B2E4A6C"
+    InstallerVersion="500"
+    Scope="perMachine"
+    Compressed="yes"
+    Description="Monitors Elite Dangerous gameplay and collects exobiology, colonisation, and BGS data.">
 
-    <Package 
-      InstallerVersion="500"
-      InstallScope="perMachine"
-      Compressed="yes"
-      Description="A production-ready Windows application that monitors Elite Dangerous gameplay and collects valuable data about exobiology, colonization, and BGS activity." />
+    <!-- Allow upgrading over previous versions; block downgrades -->
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+      Schedule="afterInstallInitialize" />
 
-    <Media 
-      Id="1"
-      Cabinet="EliteDataCollector.cab"
-      EmbedCab="yes"
-      DiskPrompt="Elite Data Collector Installation Media" />
+    <MediaTemplate EmbedCab="yes" />
 
-    <StandardDirectory Id="ProgramFilesFolder">
+    <!-- UI: install-dir picker with licence screen -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!-- Directory layout -->
+    <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Elite Data Collector" />
     </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppMenuFolder" Name="Elite Data Collector" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
 
-    <Feature 
-      Id="ProductFeature"
-      Title="Elite Data Collector"
-      Level="1"
-      Description="Monitors Elite Dangerous gameplay and collects exobiology and colonization data.">
-      <ComponentRef Id="MainExecutableComponent" />
-      <ComponentRef Id="AppSettingsComponent" />
+    <!-- Main feature -->
+    <Feature Id="ProductFeature" Title="Elite Data Collector" Level="1"
+             Description="Monitors Elite Dangerous gameplay and collects exobiology and colonisation data.">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="AppShortcuts" />
     </Feature>
 
-    <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="MainExecutableComponent" Guid="*" Win64="yes">
-        <File 
-          Id="EliteDataCollectorHostExe"
-          Name="EliteDataCollector.Host.exe"
-          Source="..\EliteDataCollector.Host\bin\Release\net10.0-windows\EliteDataCollector.Host.exe"
-          Checksum="yes"
-          KeyPath="yes" />
-      </Component>
+    <!-- All publish output files (self-contained, win-x64) -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="..\EliteDataCollector.Host\bin\Release\net10.0-windows\publish\**" />
+    </ComponentGroup>
 
-      <Component Id="AppSettingsComponent" Guid="*" Win64="yes">
-        <File 
-          Id="AppSettingsJson"
-          Name="appsettings.json"
-          Source="..\EliteDataCollector.Host\bin\Release\net10.0-windows\appsettings.json" />
-      </Component>
-    </DirectoryRef>
-  </Product>
+    <!-- Shortcuts with a registry KeyPath so MSI tracks them cleanly -->
+    <Component Id="AppShortcuts" Directory="AppMenuFolder" Guid="E7B3C1A4-2F8D-4E9A-B5C6-1D3F7A2E4C8B">
+      <Shortcut Id="StartMenuShortcut"
+                Name="Elite Data Collector"
+                Target="[INSTALLFOLDER]EliteDataCollector.Host.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Description="Monitor Elite Dangerous gameplay and collect exobiology data" />
+      <Shortcut Id="DesktopShortcut"
+                Name="Elite Data Collector"
+                Directory="DesktopFolder"
+                Target="[INSTALLFOLDER]EliteDataCollector.Host.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Description="Monitor Elite Dangerous gameplay and collect exobiology data" />
+      <RemoveFolder Id="RemoveAppMenuFolder" Directory="AppMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\Elite Data Collector"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+  </Package>
 </Wix>

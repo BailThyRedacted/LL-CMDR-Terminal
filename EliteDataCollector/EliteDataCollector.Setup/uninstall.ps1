@@ -31,14 +31,22 @@ if ([string]::IsNullOrEmpty($InstallPath)) {
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "$AppName - Uninstaller" -ForegroundColor Cyan
+Write-Host " $AppName - Uninstaller" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Installation path: $InstallPath"
 Write-Host ""
 
+# Guard: abort if the application is still running
+$proc = Get-Process -Name "EliteDataCollector.Host" -ErrorAction SilentlyContinue
+if ($proc) {
+    Write-Host "[ERROR] Elite Data Collector is currently running." -ForegroundColor Red
+    Write-Host "        Please close the application and run the uninstaller again." -ForegroundColor Red
+    exit 1
+}
+
 $confirm = Read-Host "Are you sure you want to uninstall $AppName? (Y/N)"
-if ($confirm -ne "Y" -and $confirm -ne "yes") {
+if ($confirm -notmatch '^y(es)?$') {
     Write-Host "Uninstallation cancelled."
     exit 0
 }
@@ -60,11 +68,12 @@ if (Test-Path $InstallPath) {
 
 # Remove registry entries
 Write-Host "Removing registry entries..."
+Remove-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$AppName" -Force -ErrorAction SilentlyContinue
 Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$AppName" -Force -ErrorAction SilentlyContinue
 Remove-Item -Path "HKCU:\Software\$AppName" -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Uninstallation Complete!" -ForegroundColor Cyan
+Write-Host " Uninstallation complete!" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""

@@ -13,7 +13,7 @@ if "%ProgramFiles(x86)%" neq "" (
 
 echo.
 echo ========================================
-echo Elite Data Collector - Uninstaller
+echo  Elite Data Collector - Uninstaller
 echo ========================================
 echo.
 
@@ -21,6 +21,17 @@ set /p confirm="Are you sure you want to uninstall Elite Data Collector? (Y/N): 
 if /i not "%confirm%"=="Y" (
     echo Uninstallation cancelled.
     exit /b 0
+)
+
+REM ── Guard: abort if the application is still running ──────────────────────
+tasklist /FI "IMAGENAME eq EliteDataCollector.Host.exe" 2>nul | find /I "EliteDataCollector.Host.exe" >nul
+if %errorlevel% equ 0 (
+    echo.
+    echo [ERROR] Elite Data Collector is currently running.
+    echo         Please close the application and run the uninstaller again.
+    echo.
+    pause
+    exit /b 1
 )
 
 REM Remove shortcuts
@@ -37,12 +48,13 @@ if exist "%INSTALL_PATH%" (
 
 REM Remove registry entries
 echo Removing registry entries...
+reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Elite Data Collector" /f 2>nul
 reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Data Collector" /f 2>nul
 reg delete "HKCU\Software\Elite Data Collector" /f 2>nul
 
 echo.
 echo ========================================
-echo Uninstallation Complete!
+echo  Uninstallation complete!
 echo ========================================
 echo.
 pause
