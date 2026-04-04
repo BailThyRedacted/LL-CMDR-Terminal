@@ -42,8 +42,7 @@ namespace EliteDataCollector.Core.Services
         // JSON serialization options
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
-            PropertyNameCaseInsensitive = false,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,  // Case-insensitive for parsing responses
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
@@ -166,6 +165,57 @@ namespace EliteDataCollector.Core.Services
         }
 
         /// <summary>
+        /// Fetches systems from the ll_presence table (Lavigny's Legion presence systems).
+        /// These are the specific systems where LL is active and data should be collected.
+        ///
+        /// Teaching: RESTful query with filtering
+        /// - Uses Supabase select parameter to fetch specific columns
+        /// - Gracefully handles missing data or errors
+        /// - Retry logic for transient failures
+        /// </summary>
+        public async Task<List<string>> GetLlPresenceSystemsAsync()
+        {
+            if (!IsConfigured())
+            {
+                _outputWriter?.WriteLine("ERROR: Supabase not configured. Skipping GetLlPresenceSystems.");
+                return new List<string>();
+            }
+
+            return await RetryAsync(async () =>
+            {
+                _outputWriter?.WriteLine("Fetching LL presence systems from Supabase...");
+
+                using HttpClient client = new();
+                string url = $"{_supabaseUrl}/rest/v1/ll_presence?select=system_name";
+                
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                AddAuthHeaders(request);
+
+                var response = await client.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _outputWriter?.WriteLine($"ERROR: Auth failed fetching LL presence systems: {response.StatusCode}");
+                    return new List<string>();  // Don't retry auth errors
+                }
+
+                response.EnsureSuccessStatusCode();
+                var json = await response.Content.ReadAsStringAsync();
+                
+                // Parse JSON array of objects: [{"system_name": "Sol"}, {"system_name": "Alpha Centauri"}]
+                var systems = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(json, JsonOptions) ?? new();
+                var systemNames = systems
+                    .Select(s => s.ContainsKey("system_name") ? s["system_name"].GetString() ?? "" : "")
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+
+                _outputWriter?.WriteLine($"LL presence systems fetched successfully: {systemNames.Count} systems");
+                return systemNames;
+            });
+        }
+
+        /// <summary>
         /// Uploads or updates system data in Supabase (upsert operation).
         ///
         /// Teaching: Upsert pattern for database operations
@@ -210,16 +260,16 @@ namespace EliteDataCollector.Core.Services
                 // Add user_id for RLS filtering
                 string userId = await GetUserIdAsync();
                 
-                // Create request body with user_id
+                // Create request body with snake_case field names matching SQL schema
                 var requestBody = new
                 {
-                    systemData.Id,
-                    systemData.SystemName,
-                    systemData.Timestamp,
-                    systemData.ControllingFaction,
-                    systemData.Power,
-                    systemData.PowerState,
-                    systemData.LavignyInfluence,
+                    id = systemData.Id,
+                    system_name = systemData.SystemName,
+                    timestamp = systemData.Timestamp,
+                    controlling_faction = systemData.ControllingFaction,
+                    power = systemData.Power,
+                    power_state = systemData.PowerState,
+                    lavigny_influence = systemData.LavignyInfluence,
                     user_id = userId
                 };
 
@@ -287,13 +337,13 @@ namespace EliteDataCollector.Core.Services
                 string userId = await GetUserIdAsync();
                 
                 // Create request body with user_id for each structure
+                // Note: SQL schema has structure_type and status (not structure_name or progress_percent)
                 var requestBody = structures.Select(s => new
                 {
                     id = Guid.NewGuid(),
                     system_id = systemAddress,
                     structure_type = s.Type ?? "",
-                    structure_name = s.Name ?? "",
-                    progress_percent = s.ProgressPercent,
+                    status = $"{s.Name} ({s.ProgressPercent}%)",  // Store name + progress in status field
                     user_id = userId,
                     created_at = DateTime.UtcNow
                 }).ToList();

@@ -83,6 +83,27 @@ namespace EliteDataCollector.Core.Services
         /// <param name="systemAddress">System address identifier (from game)</param>
         /// <param name="structures">List of structures in this system to upsert</param>
         Task UpsertStructuresAsync(long systemAddress, List<Structure> structures);
+
+        /// <summary>
+        /// Fetches systems from the ll_presence table (Lavigny's Legion presence).
+        /// These are the specific systems where LL has active presence and data should be collected.
+        ///
+        /// Teaching: Similar to GetTargetSystemsAsync but queries a different table.
+        /// This allows the colonization module to filter to only LL-relevant systems.
+        ///
+        /// Implementation should:
+        /// - Query the "ll_presence" table from Supabase
+        /// - Return list of system names (e.g., "Sol", "Alpha Centauri", "Sirius")
+        /// - Handle network errors gracefully (log, return empty list)
+        /// - Never throw (graceful degradation)
+        /// </summary>
+        /// <returns>
+        /// List of LL presence system names. Returns empty list if:
+        /// - Supabase is unreachable
+        /// - No systems configured in ll_presence table
+        /// - Query fails for any reason
+        /// </returns>
+        Task<List<string>> GetLlPresenceSystemsAsync();
     }
 }
 

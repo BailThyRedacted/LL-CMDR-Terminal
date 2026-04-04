@@ -22,6 +22,20 @@ namespace EliteDataCollector.Host
             {
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+                // Check if test mode is requested
+                if (args.Length > 0 && args[0] == "--test")
+                {
+                    var testConfiguration = new ConfigurationBuilder()
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                        .Build();
+                    
+                    var testOutputWriter = new ConsoleOutputWriter();
+                    testOutputWriter.SetMinimumLogLevel(LogLevel.Debug);
+                    
+                    await SupabaseIntegrationTest.RunTest(testConfiguration, testOutputWriter);
+                    return;
+                }
+
                 // Load configuration
                 var configuration = new ConfigurationBuilder()
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
@@ -55,7 +69,10 @@ namespace EliteDataCollector.Host
                 services.AddSingleton<SettingsManager, SettingsManagerImpl>();
                 services.AddSingleton<KeyValidator, KeyValidatorImpl>();
                 services.AddSingleton<SupabaseClient>(sp =>
-                    new SupabaseClientImpl(configuration, sp.GetRequiredService<OutputWriter>()));
+                    new SupabaseClientImpl(
+                        configuration, 
+                        sp.GetService<SettingsManager>(), 
+                        sp.GetRequiredService<OutputWriter>()));
                 services.AddSingleton<SetupConsole>();
 
                 // TEACHING NOTE - Game Detection Services:

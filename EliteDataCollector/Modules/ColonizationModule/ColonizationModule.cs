@@ -345,8 +345,9 @@ namespace ColonizationModule
         // ========== PRIVATE LOADING METHODS ==========
 
         /// <summary>
-        /// Load target systems from Supabase.
-        /// These are the systems we monitor and report to Supabase.
+        /// Load target systems from Supabase ll_presence table.
+        /// These are the specific systems where Lavigny's Legion has presence.
+        /// The module will only send Supabase data for systems in this list.
         /// </summary>
         private async Task LoadTargetSystems()
         {
@@ -358,14 +359,14 @@ namespace ColonizationModule
                     return;
                 }
 
-                var systems = await _supabaseClient.GetTargetSystemsAsync();
+                var systems = await _supabaseClient.GetLlPresenceSystemsAsync();
                 _targetSystems = new HashSet<string>(systems, StringComparer.OrdinalIgnoreCase);
 
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] Loaded {_targetSystems.Count} target systems from Supabase");
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] Loaded {_targetSystems.Count} LL presence systems from Supabase");
             }
             catch (Exception ex)
             {
-                _outputWriter?.WriteLine($"[{MODULE_NAME}] WARNING: Could not load target systems: {ex.Message}");
+                _outputWriter?.WriteLine($"[{MODULE_NAME}] WARNING: Could not load LL presence systems: {ex.Message}");
                 _outputWriter?.WriteLine($"[{MODULE_NAME}] Continuing - will track all systems for INARA");
                 _targetSystems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             }
