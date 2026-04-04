@@ -1,0 +1,16 @@
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\bin\Debug\net10.0-windows\ColonizationModule.deps.json
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\bin\Debug\net10.0-windows\ColonizationModule.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\bin\Debug\net10.0-windows\ColonizationModule.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\bin\Debug\net10.0-windows\EliteDataCollector.Core.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\bin\Debug\net10.0-windows\EliteDataCollector.Core.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.csproj.AssemblyReference.cache
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.AssemblyInfoInputs.cache
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.AssemblyInfo.cs
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.csproj.CoreCompileInputs.cache
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.sourcelink.json
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\Coloniza.E5752D16.Up2Date
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\refint\ColonizationModule.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ColonizationModule.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\Modules\ColonizationModule\obj\Debug\net10.0-windows\ref\ColonizationModule.dll

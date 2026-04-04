@@ -6,14 +6,13 @@ A production-ready Windows application that monitors Elite Dangerous gameplay an
 
 ## Features
 
-### ExplorationModule 🔬
+### ExplorationModule
 Identify high-value exobiology planets with real-time alerts:
 - Scores planets 0-100 based on atmosphere, temperature, gravity, type, and landability
 - Console alerts for high-value exploration targets (estimated 100K - 20M+ credits per planet)
 - Persistent local storage of all scans in JSON format
-- Bacterium filtering (ignores low-value bacteria-only planets)
 
-### ColonizationModule 🏗️
+### ColonizationModule
 Track BGS faction influence and colonization progress:
 - Monitors system control, faction influence, and PowerPlay allegiance
 - Uploads data to Supabase for analytics and tracking
@@ -45,43 +44,55 @@ Elite Dangerous Journal (game writes events)
 ## Technology Stack
 
 - **Language**: C# 12 (.NET 10.0)
-- **Architecture**: Windows Service / Console App
+- **Architecture**: Windows Console App (Service ready)
 - **Database**: Supabase (PostgreSQL via REST API)
 - **File Monitoring**: FileSystemWatcher (event-driven, ~0% CPU idle)
 - **JSON**: System.Text.Json (modern, performant, no external deps)
 - **Configuration**: Microsoft.Extensions.Configuration (appsettings.json)
+- **Installer**: WiX 4 + PowerShell/Batch scripts
+- **Packaging**: Pre-built MSI-ready distributions
 
 ## Quick Start
 
-### Prerequisites
-- Windows 10/11
-- .NET 10 Desktop Runtime
-- Elite Dangerous (installed and run once)
-- Supabase account (optional, for ColonizationModule)
+### Option 1: Use Pre-Built Installer (Easiest)
 
-### Setup (2 minutes)
+**Prerequisites:**
+- Windows 10/11 (64-bit)
+- Elite Dangerous (installed and run once)
+
+**Installation (1 minute):**
+1. Download the installer package from Releases
+2. Extract to any folder
+3. Double-click `install.bat`
+4. Follow prompts - app installs to Program Files
+
+**That's it!** Find shortcuts on your Desktop and Start Menu.
+
+### Option 2: Portable (No Installation)
+
+1. Download the installer package
+2. Extract anywhere (USB drive, custom folder, etc.)
+3. Run `EliteDataCollector.Host.exe` directly
+4. No installation needed - portable format
+
+### Option 3: Build from Source (Development)
+
+**Prerequisites:**
+- Windows 10/11
+- .NET 10 SDK
+- Elite Dangerous
+
+**Setup (2 minutes):**
 ```bash
 git clone https://github.com/BailThyRedacted/LL-CMDR-Terminal.git
 cd LL-CMDR-Terminal
 ```
 
-Edit `EliteDataCollector\EliteDataCollector.Host\appsettings.json` with your Supabase credentials:
-```json
-{
-  "Supabase": {
-    "Url": "https://YOUR_PROJECT.supabase.co",
-    "Key": "YOUR_ANON_KEY"
-  }
-}
-```
-
-### Run
+**Run:**
 ```bash
 cd EliteDataCollector\EliteDataCollector.Host
 dotnet run
 ```
-
-Launch Elite Dangerous and start exploring! Console will alert you to valuable planets.
 
 **Full setup guide:** See [QUICKSTART.md](QUICKSTART.md)
 
@@ -212,27 +223,6 @@ dotnet run
 [Exploration] 🎯 HIGH VALUE: Sol - Sol 1 - Atmosphere: Water atmosphere - Score: 85/100 - Est. Value: ~15.3M credits
 ```
 
-## Configuration
-
-### appsettings.json
-```json
-{
-  "Supabase": {
-    "Url": "https://your-project.supabase.co",
-    "Key": "your-anon-public-key"
-  }
-}
-```
-
-Get these from Supabase Dashboard → Settings → API
-
-### Environment Variables (Optional)
-Can override appsettings.json:
-```bash
-set SUPABASE_URL=https://your-project.supabase.co
-set SUPABASE_KEY=your-key
-```
-
 ## Performance
 
 - **Memory**: ~50-80 MB at idle (small .NET runtime footprint)
@@ -247,7 +237,7 @@ All async/await, no blocking, efficient file monitoring.
 - [ ] Mission tracking module
 - [ ] Trade profit calculator module
 - [ ] Combat stats module
-- [ ] GUI interface (WPF/WinForms)
+- [ ] GUI interface 
 - [ ] Multiple squad support
 - [ ] Custom module plugin system
 - [ ] Web dashboard for data visualization
@@ -263,16 +253,6 @@ Contributions welcome! See [GitHub Issues](https://github.com/BailThyRedacted/LL
 3. Add project reference to Core
 4. Register in `Program.cs` DI container
 5. Module receives events automatically from `MainCore`
-
-## License
-
-Personal use. See LICENSE file for details.
-
-## Acknowledgments
-
-- Elite Dangerous journal format documentation from [Frontier Forums](https://forums.frontier.co.uk/)
-- Exobiology pricing data from [Canonn Science](https://canonn.science/codex/vista-genomics-price-list/)
-- Built as a teaching demonstration of modern C# patterns
 
 ---
 

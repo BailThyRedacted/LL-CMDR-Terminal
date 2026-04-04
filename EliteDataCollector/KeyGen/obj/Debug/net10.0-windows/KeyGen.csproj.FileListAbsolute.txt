@@ -1,0 +1,15 @@
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\bin\Debug\net10.0-windows\KeyGen.exe
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\bin\Debug\net10.0-windows\KeyGen.deps.json
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\bin\Debug\net10.0-windows\KeyGen.runtimeconfig.json
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\bin\Debug\net10.0-windows\KeyGen.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\bin\Debug\net10.0-windows\KeyGen.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.AssemblyInfoInputs.cache
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.AssemblyInfo.cs
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.csproj.CoreCompileInputs.cache
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.sourcelink.json
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\refint\KeyGen.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\KeyGen.genruntimeconfig.cache
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\KeyGen\obj\Debug\net10.0-windows\ref\KeyGen.dll

@@ -1,0 +1,53 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Product 
+    Id="*"
+    Name="Elite Data Collector"
+    Language="1033"
+    Version="1.0.0.0"
+    Manufacturer="Elite Data Collector"
+    UpgradeCode="a1b2c3d4-e5f6-47g8-h9i0-j1k2l3m4n5o6">
+
+    <Package 
+      InstallerVersion="500"
+      InstallScope="perMachine"
+      Compressed="yes"
+      Description="A production-ready Windows application that monitors Elite Dangerous gameplay and collects valuable data about exobiology, colonization, and BGS activity." />
+
+    <Media 
+      Id="1"
+      Cabinet="EliteDataCollector.cab"
+      EmbedCab="yes"
+      DiskPrompt="Elite Data Collector Installation Media" />
+
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="INSTALLFOLDER" Name="Elite Data Collector" />
+    </StandardDirectory>
+
+    <Feature 
+      Id="ProductFeature"
+      Title="Elite Data Collector"
+      Level="1"
+      Description="Monitors Elite Dangerous gameplay and collects exobiology and colonization data.">
+      <ComponentRef Id="MainExecutableComponent" />
+      <ComponentRef Id="AppSettingsComponent" />
+    </Feature>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainExecutableComponent" Guid="*" Win64="yes">
+        <File 
+          Id="EliteDataCollectorHostExe"
+          Name="EliteDataCollector.Host.exe"
+          Source="..\EliteDataCollector.Host\bin\Release\net10.0-windows\EliteDataCollector.Host.exe"
+          Checksum="yes"
+          KeyPath="yes" />
+      </Component>
+
+      <Component Id="AppSettingsComponent" Guid="*" Win64="yes">
+        <File 
+          Id="AppSettingsJson"
+          Name="appsettings.json"
+          Source="..\EliteDataCollector.Host\bin\Release\net10.0-windows\appsettings.json" />
+      </Component>
+    </DirectoryRef>
+  </Product>
+</Wix>

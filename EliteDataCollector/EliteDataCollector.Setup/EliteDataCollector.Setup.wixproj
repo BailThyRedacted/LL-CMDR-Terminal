@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk/latest">
+  <PropertyGroup>
+    <OutputType>exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- WiX Toolset properties (if using WiX as library) -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AssemblyName>EliteDataCollector.Setup</AssemblyName>
+  </PropertyGroup>
+
+  <Target Name="BuildMSI" BeforeTargets="Build">
+    <Exec Command="wix build -o bin\Debug\EliteDataCollector.Host.msi Product.wxs" WorkingDirectory="$(ProjectDir)" />
+  </Target>
+</Project>

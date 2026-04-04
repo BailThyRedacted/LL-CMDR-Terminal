@@ -1,76 +1,66 @@
-# Elite Data Collector - Quick Start Guide
+# Elite Data Collector - Setup Guide
 
-Welcome! This guide will get you up and running with the Elite Data Collector in 5 minutes.
+Welcome! Choose your setup method below.
 
 ## What This App Does
 
-**Elite Data Collector** is a Windows background service that monitors your Elite Dangerous gameplay and tracks valuable data:
+**Elite Data Collector** is a Windows application that monitors your Elite Dangerous gameplay and tracks valuable data:
 
-- **ColonizationModule**: Tracks BGS (Background Simulation) faction influence and PowerPlay state in target systems
 - **ExplorationModule**: Identifies high-value exobiology planets and alerts you to valuable scanning targets
+- **ColonizationModule**: Tracks BGS (Background Simulation) faction influence and PowerPlay state in target systems
 
-## Prerequisites
+---
 
-### 1. Download .NET 10 Runtime
-The app requires .NET 10. Download the Windows runtime:
-- Go to: https://dotnet.microsoft.com/en-us/download/dotnet/10.0
-- Click "**Runtime**" (not SDK)
-- Download: **Desktop Runtime** (Windows x64)
-- Run the installer and follow prompts
+## QUICK SETUP: Use Pre-Built Installer (Recommended)
 
-Verify installation:
+### Prerequisites
+- Windows 10/11 (64-bit)
+- Elite Dangerous (installed and run at least once)
+- ~200 MB free disk space
+
+### Installation (1 minute)
+
+1. **Download installer package** from the Releases section
+2. **Extract the folder** to any location
+3. **Double-click `install.bat`**
+4. **Follow prompts** - app installs to Program Files
+5. **Done!** Check Desktop and Start Menu for shortcuts
+
+### First Run
+1. Click the Elite Data Collector shortcut
+2. Launch Elite Dangerous
+3. Start playing - the app monitors in the background
+4. Watch console for alerts when high-value planets detected
+
+### Using Portable (No Installation)
+- Instead of running install.bat, just run `EliteDataCollector.Host.exe` directly
+- No installation needed - works from any folder (USB drive, custom location, etc.)
+
+---
+
+## DEVELOPER SETUP: Build from Source
+
+Skip this section unless you want to modify the code or build from source.
+
+### Prerequisites
+
+**Download and install:**
+- .NET 10 SDK: https://dotnet.microsoft.com/en-us/download
+- Visual Studio Code or Visual Studio (optional, for development)
+
+**Verify installation:**
 ```bash
 dotnet --version
 ```
 Should show version 10.0.x or higher.
 
-### 2. Elite Dangerous
-- Install [Elite Dangerous](https://www.elitedangerous.com/)
-- Launch the game once to create the journal folder
-- Journal files are stored in: `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\Logs\`
-
-### 3. Supabase Account (Optional, for ColonizationModule)
-Skip this if you only want to use ExplorationModule.
-
-If using ColonizationModule:
-- Create free account at: https://supabase.com
-- Create a new project
-- Get your project URL and API key from Settings → API
-
-## Setup (5 minutes)
-
-### Step 1: Download the App
+### Step 1: Clone Repository
 ```bash
 git clone https://github.com/BailThyRedacted/LL-CMDR-Terminal.git
 cd "LL-CMDR-Terminal"
 ```
 
-Or download as ZIP from GitHub and extract.
-
-### Step 2: Configure Supabase (If Using ColonizationModule)
-
-Edit this file:
-```
-EliteDataCollector\EliteDataCollector.Host\appsettings.json
-```
-
-Replace with your Supabase credentials:
-```json
-{
-  "Supabase": {
-    "Url": "https://YOUR_PROJECT_ID.supabase.co",
-    "Key": "YOUR_PUBLIC_ANON_KEY"
-  }
-}
-```
-
-Find these in Supabase Dashboard:
-- Settings → API → Project URL (= your Url)
-- Settings → API → anon public (= your Key)
-
-**Save the file.**
-
-### Step 3: Build the App
+### Step 2: Build the App
 ```bash
 cd EliteDataCollector\EliteDataCollector.Core
 dotnet build
@@ -83,7 +73,7 @@ cd ..\..
 
 You should see: `Build succeeded`
 
-### Step 4: Create a Shortcut to Run
+### Step 3: Run the App
 
 Create a batch file `run.bat` in the `LL-CMDR-Terminal` folder:
 
@@ -101,7 +91,14 @@ dotnet run
 
 ## Running the App
 
-### 1. Start the Application
+### If Using Installer
+1. Look for **Elite Data Collector** on your Desktop or Start Menu
+2. Click the shortcut - the app launches
+3. Launch Elite Dangerous
+4. Play normally - app monitors in background
+5. Watch console window for alerts
+
+### If Using Source Build
 ```bash
 dotnet run
 ```
@@ -115,7 +112,7 @@ You should see:
 [MainCore] Waiting for game launch...
 ```
 
-### 2. Launch Elite Dangerous
+### Step 2: Launch Elite Dangerous
 Start the game in the launcher. The app will detect it automatically:
 ```
 [GameProcessMonitor] Game launched detected! (EliteDangerous64.exe)
@@ -124,7 +121,7 @@ Start the game in the launcher. The app will detect it automatically:
 [Exploration] Started ready to scan planets.
 ```
 
-### 3. Start Playing
+### Step 3: Start Playing
 - **Scanning planets?** ExplorationModule will alert you to valuable exobiology targets
 - **Flying to target systems?** ColonizationModule will track BGS faction data
 
@@ -136,8 +133,8 @@ Watch the console for alerts:
 - Est. Value: ~12.5M credits
 ```
 
-### 4. Exit the App
-Press `Ctrl+C` to stop. All data is saved automatically.
+### Step 4: Exit the App
+Press `Ctrl+C` to stop (or close the console window). All data is saved automatically.
 
 ## Where Your Data Is Saved
 
@@ -211,6 +208,30 @@ Press `Ctrl+C` to stop. All data is saved automatically.
 - PowerPlay power and state
 - All faction influence values
 - All faction states (Boom, War, Election, etc.)
+
+## Uninstallation
+
+### If Using Installer
+1. Locate the installer folder (where you extracted it)
+2. Run `uninstall.bat`
+3. Confirm when prompted
+4. All files, shortcuts, and registry entries are removed
+
+**Or manually:**
+1. Delete the installation folder from Program Files
+2. Delete shortcuts from Desktop and Start Menu
+3. Done!
+
+### If Using Source Build
+Simply delete the cloned repository folder. No registry entries created.
+
+## Re-installing
+
+To upgrade or reinstall:
+1. **Uninstall** using the method above
+2. **Download** the latest installer package
+3. **Run install.bat** from the new package
+4. All configuration files are preserved in `%LOCALAPPDATA%\Elite Data Collector`
 
 ## Troubleshooting
 
@@ -341,13 +362,25 @@ Format (JSON array):
 
 ## First Run Checklist
 
-- [ ] .NET 10 installed (`dotnet --version` works)
+### If Using Installer
+- [ ] Installer package downloaded and extracted
+- [ ] Ran `install.bat` successfully
+- [ ] Desktop or Start Menu shortcut created
 - [ ] Elite Dangerous installed and launched once
-- [ ] Supabase credentials in appsettings.json (if using ColonizationModule)
-- [ ] App builds successfully (`dotnet build` shows 0 errors)
-- [ ] App starts without errors
-- [ ] Elite Dangerous is running
+- [ ] Shortcut launches app without errors
+- [ ] Console window opens when launching
+
+### If Building from Source
+- [ ] .NET 10 SDK installed (`dotnet --version` works)
+- [ ] Repository cloned successfully
+- [ ] `dotnet build` shows 0 errors
+- [ ] App starts without errors (`dotnet run`)
+- [ ] Elite Dangerous installed and launched once
+
+### For Both Setups
 - [ ] Console shows "[GameProcessMonitor] Game launched detected!"
+- [ ] Supabase credentials in appsettings.json (if using ColonizationModule)
+- [ ] No permission errors in console
 
 ## Tips & Tricks
 
