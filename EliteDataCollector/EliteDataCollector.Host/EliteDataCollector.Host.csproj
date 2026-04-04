@@ -2,6 +2,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EliteDataCollector.Core\EliteDataCollector.Core.csproj" />
+    <ProjectReference Include="..\Modules\ColonizationModule\ColonizationModule.csproj" />
+    <ProjectReference Include="..\Modules\ExplorationModule\ExplorationModule.csproj" />
+    <ProjectReference Include="..\Modules\PowerplayModule\PowerplayModule.csproj" />
   </ItemGroup>
   
   <ItemGroup>

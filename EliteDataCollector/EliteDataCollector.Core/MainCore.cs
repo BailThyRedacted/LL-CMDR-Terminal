@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using EliteDataCollector.Core.Services;
 
@@ -59,6 +60,12 @@ namespace EliteDataCollector.Core
         /// False means we're in "idle" mode waiting for game to launch.
         /// </summary>
         private bool _isRunning = false;
+
+        // ====================================================================
+        // REGISTERED MODULES - Receive journal events during gameplay
+        // ====================================================================
+
+        private List<GameLoopModule> _modules = new();
 
         // ====================================================================
         // CONSTRUCTOR - Dependency Injection
@@ -127,6 +134,20 @@ namespace EliteDataCollector.Core
             _outputWriter?.WriteLine($"MainCore: Module preferences set");
             _outputWriter?.WriteLine($"  - ColonizationModule: {(preferences.ColonizationEnabled ? "ENABLED" : "disabled")}");
             _outputWriter?.WriteLine($"  - ExplorationModule: {(preferences.ExplorationEnabled ? "ENABLED" : "disabled")}");
+            _outputWriter?.WriteLine($"  - PowerplayModule:   {(preferences.PowerplayEnabled ? "ENABLED" : "disabled")}");
+        }
+
+        /// <summary>
+        /// Registers the list of enabled game loop modules.
+        /// Call this after SetModulePreferences() and before InitializeAsync().
+        /// Modules should already be initialized (InitializeAsync called) before registering.
+        /// </summary>
+        public void RegisterModules(IEnumerable<GameLoopModule> modules)
+        {
+            _modules = new List<GameLoopModule>(modules);
+            _outputWriter?.WriteLine($"MainCore: {_modules.Count} module(s) registered.");
+            foreach (var m in _modules)
+                _outputWriter?.WriteLine($"  + {m.Name}: {m.Description}");
         }
 
         // ====================================================================
@@ -473,17 +494,28 @@ namespace EliteDataCollector.Core
                 if (_isRunning)
                     await StopAsync();
 
-                // STEP 2: Unsubscribe from events
+                // STEP 2: Shut down all registered modules
+                if (_modules.Count > 0)
+                {
+                    _outputWriter?.WriteLine("  - Shutting down modules...");
+                    foreach (var module in _modules)
+                    {
+                        try { await module.ShutdownAsync(); }
+                        catch (Exception mex) { _outputWriter?.WriteLine($"  [WARNING] {module.Name} shutdown error: {mex.Message}"); }
+                    }
+                }
+
+                // STEP 3: Unsubscribe from events
                 _outputWriter?.WriteLine("  - Unsubscribing from service events...");
                 _gameMonitor.GameLaunched -= OnGameLaunched;
                 _gameMonitor.GameExited -= OnGameExited;
                 _journalMonitor.JournalLineRead -= OnJournalLineRead;
 
-                // STEP 3: Stop game process monitor
+                // STEP 4: Stop game process monitor
                 _outputWriter?.WriteLine("  - Stopping game process monitor...");
                 await _gameMonitor.StopAsync();
 
-                // STEP 4: Mark as not initialized
+                // STEP 5: Mark as not initialized
                 _isInitialized = false;
 
                 _outputWriter?.WriteLine("MainCore: Shutdown complete.");
@@ -570,17 +602,22 @@ namespace EliteDataCollector.Core
         /// </summary>
         private async void OnJournalLineRead(object? sender, JournalLineEventArgs e)
         {
-            // For now, just log. Later, route to modules.
-            // We don't log every line (too spammy), just important ones.
-            if (e.EventType == "FSDJump" || e.EventType.Contains("Structure"))
+            try
             {
-                _outputWriter?.WriteLine($"MainCore: Journal event: {e.EventType}");
-            }
+                // Route the event to all registered modules in parallel
+                if (_modules.Count > 0)
+                {
+                    var tasks = new List<Task>(_modules.Count);
+                    foreach (var module in _modules)
+                        tasks.Add(module.OnJournalLineAsync(e.RawLine, e.ParsedEvent));
 
-            // TODO: In future milestones:
-            // - Load all modules
-            // - Call module.OnJournalLineAsync(e.RawLine, e.ParsedEvent)
-            // - Await all tasks
+                    await Task.WhenAll(tasks);
+                }
+            }
+            catch (Exception ex)
+            {
+                _outputWriter?.WriteLine($"MainCore: Error routing journal event '{e.EventType}': {ex.Message}");
+            }
         }
 
         // ====================================================================

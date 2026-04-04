@@ -371,6 +371,133 @@ namespace EliteDataCollector.Core.Services
             });
         }
 
+        /// <summary>
+        /// Inserts a single PowerPlay activity record into the powerplay_activities table.
+        /// Each call produces a new row — no deduplication.
+        /// </summary>
+        public async Task InsertPowerplayActivityAsync(PowerplayActivity activity)
+        {
+            if (!IsConfigured())
+            {
+                _outputWriter?.WriteLine("ERROR: Supabase not configured. Skipping InsertPowerplayActivity.");
+                return;
+            }
+
+            if (activity == null)
+            {
+                _outputWriter?.WriteLine("ERROR: PowerplayActivity is null. Skipping insert.");
+                return;
+            }
+
+            await RetryAsync(async () =>
+            {
+                _outputWriter?.WriteLine($"Inserting PowerPlay activity: {activity.EventType} in {activity.SystemName ?? "unknown system"}");
+
+                using HttpClient client = new();
+
+                string userId = await GetUserIdAsync();
+                activity.UserId = userId;
+
+                var requestBody = new
+                {
+                    id = activity.Id,
+                    event_type = activity.EventType,
+                    power = activity.Power,
+                    system_name = activity.SystemName,
+                    item_type = activity.ItemType,
+                    count = activity.Count,
+                    merits = activity.Merits,
+                    amount = activity.Amount,
+                    votes = activity.Votes,
+                    timestamp = activity.Timestamp,
+                    user_id = userId
+                };
+
+                string json = JsonSerializer.Serialize(requestBody, JsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                string url = $"{_supabaseUrl}/rest/v1/powerplay_activities";
+                var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+                AddAuthHeaders(request);
+                request.Headers.Add("X-User-Id", userId);
+
+                var response = await client.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _outputWriter?.WriteLine($"ERROR: Auth failed inserting PowerPlay activity: {response.StatusCode}");
+                    return new List<string>();  // Don't retry auth errors
+                }
+
+                response.EnsureSuccessStatusCode();
+                _outputWriter?.WriteLine($"PowerPlay activity inserted: {activity.EventType}");
+                return new List<string>();
+            });
+        }
+
+        /// <summary>
+        /// Upserts an ALD star system record into the powerplay_systems table.
+        /// Uses SystemAddress (Id) as the unique key; revisiting a system updates the row.
+        /// </summary>
+        public async Task UpsertPowerplaySystemAsync(PowerplaySystem system)
+        {
+            if (!IsConfigured())
+            {
+                _outputWriter?.WriteLine("ERROR: Supabase not configured. Skipping UpsertPowerplaySystem.");
+                return;
+            }
+
+            if (system == null)
+            {
+                _outputWriter?.WriteLine("ERROR: PowerplaySystem is null. Skipping upsert.");
+                return;
+            }
+
+            await RetryAsync(async () =>
+            {
+                _outputWriter?.WriteLine($"Upserting PowerPlay system: {system.SystemName} ({system.PowerState})");
+
+                using HttpClient client = new();
+
+                string userId = await GetUserIdAsync();
+                system.UserId = userId;
+                system.Timestamp = DateTime.UtcNow;
+
+                var requestBody = new
+                {
+                    id = system.Id,
+                    system_name = system.SystemName,
+                    power = system.Power,
+                    power_state = system.PowerState,
+                    timestamp = system.Timestamp,
+                    user_id = userId
+                };
+
+                string json = JsonSerializer.Serialize(requestBody, JsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                string url = $"{_supabaseUrl}/rest/v1/powerplay_systems?on_conflict=id";
+                var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+                AddAuthHeaders(request);
+                request.Headers.Add("Prefer", "resolution=merge-duplicates");
+                request.Headers.Add("X-User-Id", userId);
+
+                var response = await client.SendAsync(request);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    _outputWriter?.WriteLine($"ERROR: Auth failed upserting PowerPlay system: {response.StatusCode}");
+                    return new List<string>();  // Don't retry auth errors
+                }
+
+                response.EnsureSuccessStatusCode();
+                _outputWriter?.WriteLine($"PowerPlay system upserted: {system.SystemName}");
+                return new List<string>();
+            });
+        }
+
         // ========== PRIVATE HELPER METHODS ==========
 
         /// <summary>

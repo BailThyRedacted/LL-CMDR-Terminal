@@ -55,3 +55,9 @@ C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCol
 C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\obj\Debug\net10.0-windows\EliteDataCollector.Host.pdb
 C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\obj\Debug\net10.0-windows\EliteDataCollector.Host.genruntimeconfig.cache
 C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\obj\Debug\net10.0-windows\ref\EliteDataCollector.Host.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\bin\Debug\net10.0-windows\ColonizationModule.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\bin\Debug\net10.0-windows\ExplorationModule.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\bin\Debug\net10.0-windows\PowerplayModule.dll
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\bin\Debug\net10.0-windows\ColonizationModule.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\bin\Debug\net10.0-windows\ExplorationModule.pdb
+C:\Users\seva2\Documents\VSCode\LL CMDR Terminal\EliteDataCollector\EliteDataCollector.Host\bin\Debug\net10.0-windows\PowerplayModule.pdb

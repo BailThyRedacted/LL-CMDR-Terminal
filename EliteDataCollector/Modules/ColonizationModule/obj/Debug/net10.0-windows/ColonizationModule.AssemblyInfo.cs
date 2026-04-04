@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ColonizationModule")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+74a27694d3718cedf3163dfe8aac806323f493cf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+72aa6f50ef38ff08ae0d12e212fbf6f033db0170")]
 [assembly: System.Reflection.AssemblyProductAttribute("ColonizationModule")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ColonizationModule")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

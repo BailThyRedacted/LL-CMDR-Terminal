@@ -74,6 +74,10 @@ namespace EliteDataCollector.Core.Services
 
         /// <summary>Enable ExplorationModule (exobiology alerts)</summary>
         [JsonPropertyName("exploration_enabled")]
-        public bool ExplorationEnabled { get; set; } = false;
+        public bool ExplorationEnabled { get; set; } = true;
+
+        /// <summary>Enable PowerplayModule (PowerPlay activity and ALD system state tracking)</summary>
+        [JsonPropertyName("powerplay_enabled")]
+        public bool PowerplayEnabled { get; set; } = true;
     }
 }

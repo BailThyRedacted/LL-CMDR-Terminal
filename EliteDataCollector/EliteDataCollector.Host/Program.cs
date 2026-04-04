@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using EliteDataCollector.Core;
@@ -122,6 +123,7 @@ namespace EliteDataCollector.Host
                 outputWriter.WriteLine($"Commander: {settings.CommanderName}");
                 outputWriter.WriteLine($"ColonizationModule: {(settings.Modules.ColonizationEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine($"ExplorationModule: {(settings.Modules.ExplorationEnabled ? "ENABLED" : "disabled")}");
+                outputWriter.WriteLine($"PowerplayModule:   {(settings.Modules.PowerplayEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine("");
 
                 // ===== INITIALIZE MAINCORE =====
@@ -140,6 +142,35 @@ namespace EliteDataCollector.Host
                     idleDetector: idleDetector);
                 mainCore.SetCommanderContext(1, settings.CommanderName);
                 mainCore.SetModulePreferences(settings.Modules);
+
+                // ===== INITIALIZE & REGISTER MODULES =====
+                var modules = new List<EliteDataCollector.Core.Services.GameLoopModule>();
+
+                if (settings.Modules.ColonizationEnabled)
+                {
+                    outputWriter.WriteLine("Initializing ColonizationModule...");
+                    var m = new ColonizationModule.ColonizationModule();
+                    await m.InitializeAsync(serviceProvider);
+                    modules.Add(m);
+                }
+
+                if (settings.Modules.ExplorationEnabled)
+                {
+                    outputWriter.WriteLine("Initializing ExplorationModule...");
+                    var m = new ExplorationModule.ExplorationModule();
+                    await m.InitializeAsync(serviceProvider);
+                    modules.Add(m);
+                }
+
+                if (settings.Modules.PowerplayEnabled)
+                {
+                    outputWriter.WriteLine("Initializing PowerplayModule...");
+                    var m = new PowerplayModule.PowerplayModule();
+                    await m.InitializeAsync(serviceProvider);
+                    modules.Add(m);
+                }
+
+                mainCore.RegisterModules(modules);
 
                 await mainCore.InitializeAsync();
 

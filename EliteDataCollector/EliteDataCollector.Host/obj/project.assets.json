@@ -655,6 +655,19 @@
           }
         }
       },
+      "ColonizationModule/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "EliteDataCollector.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/ColonizationModule.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ColonizationModule.dll": {}
+        }
+      },
       "EliteDataCollector.Core/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -669,6 +682,32 @@
         },
         "runtime": {
           "bin/placeholder/EliteDataCollector.Core.dll": {}
+        }
+      },
+      "ExplorationModule/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "EliteDataCollector.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/ExplorationModule.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ExplorationModule.dll": {}
+        }
+      },
+      "PowerplayModule/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "EliteDataCollector.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/PowerplayModule.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/PowerplayModule.dll": {}
         }
       }
     }
@@ -1654,19 +1693,37 @@
         "websocket.client.nuspec"
       ]
     },
+    "ColonizationModule/1.0.0": {
+      "type": "project",
+      "path": "../Modules/ColonizationModule/ColonizationModule.csproj",
+      "msbuildProject": "../Modules/ColonizationModule/ColonizationModule.csproj"
+    },
     "EliteDataCollector.Core/1.0.0": {
       "type": "project",
       "path": "../EliteDataCollector.Core/EliteDataCollector.Core.csproj",
       "msbuildProject": "../EliteDataCollector.Core/EliteDataCollector.Core.csproj"
+    },
+    "ExplorationModule/1.0.0": {
+      "type": "project",
+      "path": "../Modules/ExplorationModule/ExplorationModule.csproj",
+      "msbuildProject": "../Modules/ExplorationModule/ExplorationModule.csproj"
+    },
+    "PowerplayModule/1.0.0": {
+      "type": "project",
+      "path": "../Modules/PowerplayModule/PowerplayModule.csproj",
+      "msbuildProject": "../Modules/PowerplayModule/PowerplayModule.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0-windows7.0": [
+      "ColonizationModule >= 1.0.0",
       "EliteDataCollector.Core >= 1.0.0",
+      "ExplorationModule >= 1.0.0",
       "Microsoft.Extensions.Configuration >= 10.0.0",
       "Microsoft.Extensions.Configuration.Json >= 10.0.0",
       "Microsoft.Extensions.DependencyInjection >= 10.0.0",
-      "Microsoft.Extensions.Http >= 10.0.0"
+      "Microsoft.Extensions.Http >= 10.0.0",
+      "PowerplayModule >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -1697,6 +1754,15 @@
           "projectReferences": {
             "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
               "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj"
+            },
+            "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\ColonizationModule.csproj": {
+              "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\ColonizationModule.csproj"
+            },
+            "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj": {
+              "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj"
+            },
+            "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\PowerplayModule\\PowerplayModule.csproj": {
+              "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\PowerplayModule\\PowerplayModule.csproj"
             }
           }
         }

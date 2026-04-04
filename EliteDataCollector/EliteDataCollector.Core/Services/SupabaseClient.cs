@@ -104,6 +104,42 @@ namespace EliteDataCollector.Core.Services
         /// - Query fails for any reason
         /// </returns>
         Task<List<string>> GetLlPresenceSystemsAsync();
+
+        /// <summary>
+        /// Inserts a new PowerPlay activity record into Supabase.
+        /// Each journal activity event produces one row — records are not deduplicated.
+        ///
+        /// Called from PowerplayModule when the player triggers a PowerPlay event:
+        /// PowerplayCollect, PowerplayDeliver, PowerplayVote, PowerplaySalary,
+        /// PowerplayFastTrack, PowerplayJoin, PowerplayDefect, PowerplayLeave.
+        ///
+        /// Implementation should:
+        /// - POST to the "powerplay_activities" table
+        /// - Include all non-null fields from the activity record
+        /// - Attach user_id for RLS filtering
+        /// - Handle errors gracefully (log, continue)
+        /// - Never throw
+        /// </summary>
+        /// <param name="activity">Populated activity record to insert.</param>
+        Task InsertPowerplayActivityAsync(PowerplayActivity activity);
+
+        /// <summary>
+        /// Upserts the current PowerPlay state of a star system into Supabase.
+        /// Only called for systems controlled by Arissa Lavigny-Duval.
+        /// One row per system (keyed on SystemAddress); updated on each visit.
+        ///
+        /// Called from PowerplayModule on FSDJump/Location events where
+        /// the Power field equals "Arissa Lavigny-Duval".
+        ///
+        /// Implementation should:
+        /// - POST to "powerplay_systems" with on_conflict=id resolution
+        /// - Update power_state and timestamp on revisit
+        /// - Attach user_id for RLS filtering
+        /// - Handle errors gracefully (log, continue)
+        /// - Never throw
+        /// </summary>
+        /// <param name="system">System state to upsert.</param>
+        Task UpsertPowerplaySystemAsync(PowerplaySystem system);
     }
 }
 
