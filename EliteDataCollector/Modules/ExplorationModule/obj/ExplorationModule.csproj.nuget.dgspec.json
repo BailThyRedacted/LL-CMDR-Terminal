@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj": {}
+    "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj": {}
   },
   "projects": {
-    "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
+    "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+        "projectUniqueName": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
         "projectName": "EliteDataCollector.Core",
-        "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+        "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
         "packagesPath": "C:\\Users\\seva2\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\obj\\",
+        "outputPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\seva2\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -360,14 +360,14 @@
         }
       }
     },
-    "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj": {
+    "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj",
+        "projectUniqueName": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj",
         "projectName": "ExplorationModule",
-        "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj",
+        "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj",
         "packagesPath": "C:\\Users\\seva2\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\obj\\",
+        "outputPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\seva2\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -383,8 +383,8 @@
           "net10.0-windows7.0": {
             "targetAlias": "net10.0-windows",
             "projectReferences": {
-              "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
-                "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj"
+              "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
+                "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj"
               }
             }
           }

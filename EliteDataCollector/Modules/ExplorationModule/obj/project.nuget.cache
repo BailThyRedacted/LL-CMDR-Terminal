@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "5j8RsNedPdk=",
+  "dgSpecHash": "zISr+qxiO5c=",
   "success": true,
-  "projectFilePath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj",
+  "projectFilePath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ExplorationModule\\ExplorationModule.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\seva2\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.0\\microsoft.extensions.configuration.10.0.0.nupkg.sha512",
     "C:\\Users\\seva2\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.0\\microsoft.extensions.configuration.abstractions.10.0.0.nupkg.sha512",

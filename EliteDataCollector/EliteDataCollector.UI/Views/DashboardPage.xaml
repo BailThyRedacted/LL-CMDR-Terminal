@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="EliteDataCollector.UI.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Padding="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <!-- Header -->
+        <TextBlock
+            Grid.Row="0"
+            FontSize="32"
+            FontWeight="Bold"
+            Text="Dashboard" />
+
+        <!-- Dashboard Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20">
+                <!-- Top Stats Grid -->
+                <Grid ColumnSpacing="15" RowSpacing="15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Credits Card -->
+                    <Border
+                        Grid.Column="0"
+                        Padding="20"
+                        Background="#F0F0F0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="10">
+                            <TextBlock FontSize="14" Foreground="#666666" Text="Credits" />
+                            <TextBlock
+                                x:Name="CreditsValue"
+                                FontSize="28"
+                                FontWeight="Bold"
+                                Foreground="#000000" />
+                            <TextBlock FontSize="11" Foreground="#999999" Text="Current Balance" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Location Card -->
+                    <Border
+                        Grid.Column="1"
+                        Padding="20"
+                        Background="#F0F0F0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="10">
+                            <TextBlock FontSize="14" Foreground="#666666" Text="Current Location" />
+                            <TextBlock
+                                x:Name="LocationValue"
+                                FontSize="24"
+                                FontWeight="Bold"
+                                Foreground="#000000"
+                                Text="Unknown" />
+                            <TextBlock
+                                x:Name="StarportValue"
+                                FontSize="11"
+                                Foreground="#999999"
+                                Text="N/A" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Merits Card -->
+                    <Border
+                        Grid.Column="2"
+                        Padding="20"
+                        Background="#F0F0F0"
+                        CornerRadius="8">
+                        <StackPanel Spacing="10">
+                            <TextBlock FontSize="14" Foreground="#666666" Text="PowerPlay Merits" />
+                            <TextBlock
+                                x:Name="MeritsValue"
+                                FontSize="28"
+                                FontWeight="Bold"
+                                Foreground="#000000" />
+                            <TextBlock FontSize="11" Foreground="#999999" Text="Current Merits" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Recent Activity -->
+                <Border Padding="20" Background="#F0F0F0" CornerRadius="8">
+                    <StackPanel Spacing="15">
+                        <TextBlock FontSize="18" FontWeight="Bold" Text="Recent Activity" />
+                        <ListView
+                            x:Name="ActivityList"
+                            Height="300" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Refresh Button -->
+                <Button
+                    Padding="15,10"
+                    Background="#0078D4"
+                    Content="Refresh Now"
+                    Foreground="White"
+                    Click="OnRefreshClick" />
+
+                <!-- Last Update -->
+                <TextBlock
+                    FontSize="12"
+                    Foreground="#999999"
+                    x:Name="LastUpdateLabel" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
+

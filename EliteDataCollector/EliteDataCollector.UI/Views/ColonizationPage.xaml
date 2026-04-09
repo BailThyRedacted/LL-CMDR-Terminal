@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="EliteDataCollector.UI.Views.ColonizationPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Padding="30">
+        <StackPanel Spacing="20">
+            <TextBlock FontSize="32" FontWeight="Bold" Text="🛸 Colonization Module" />
+            <Border Padding="30" Background="#F0F0F0" CornerRadius="8">
+                <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock FontSize="18" Text="Colonization Data" FontWeight="Bold" />
+                    <TextBlock FontSize="14" Foreground="#666666" Text="Awaiting data from the Colonization Module..." />
+                    <ProgressRing IsActive="True" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</Page>
+

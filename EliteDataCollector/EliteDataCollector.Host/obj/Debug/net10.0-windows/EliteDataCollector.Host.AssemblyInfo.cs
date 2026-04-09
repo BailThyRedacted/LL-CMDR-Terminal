@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EliteDataCollector.Host")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+72aa6f50ef38ff08ae0d12e212fbf6f033db0170")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2a7a802b8a6a8af4b0eda3e016b982a391cb3d3a")]
 [assembly: System.Reflection.AssemblyProductAttribute("EliteDataCollector.Host")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EliteDataCollector.Host")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

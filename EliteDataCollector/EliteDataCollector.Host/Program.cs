@@ -27,6 +27,7 @@ namespace EliteDataCollector.Host
                 if (args.Length > 0 && args[0] == "--test")
                 {
                     var testConfiguration = new ConfigurationBuilder()
+                        .SetBasePath(AppContext.BaseDirectory)
                         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                         .Build();
                     
@@ -39,6 +40,7 @@ namespace EliteDataCollector.Host
 
                 // Load configuration
                 var configuration = new ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                     .Build();
 
@@ -91,7 +93,7 @@ namespace EliteDataCollector.Host
                 services.AddSingleton<UpdateService>(sp =>
                 {
                     var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-                    var gitHubRepo = configuration["UpdateCheck:GitHubRepository"] ?? "your-username/EliteDataCollector";
+                    var gitHubRepo = configuration["UpdateCheck:GitHubRepository"] ?? "BailThyRedacted/LL-CMDR-Terminal";
                     var currentVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.0.0";
                     return new UpdateServiceImpl(httpClient, sp.GetRequiredService<OutputWriter>(), gitHubRepo, currentVersion);
                 });

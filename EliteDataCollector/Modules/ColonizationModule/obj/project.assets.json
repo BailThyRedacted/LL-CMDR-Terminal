@@ -1243,11 +1243,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\ColonizationModule.csproj",
+      "projectUniqueName": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\ColonizationModule.csproj",
       "projectName": "ColonizationModule",
-      "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\ColonizationModule.csproj",
+      "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\ColonizationModule.csproj",
       "packagesPath": "C:\\Users\\seva2\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\obj\\",
+      "outputPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\Modules\\ColonizationModule\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\seva2\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -1263,8 +1263,8 @@
         "net10.0-windows7.0": {
           "targetAlias": "net10.0-windows",
           "projectReferences": {
-            "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
-              "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj"
+            "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj": {
+              "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj"
             }
           }
         }

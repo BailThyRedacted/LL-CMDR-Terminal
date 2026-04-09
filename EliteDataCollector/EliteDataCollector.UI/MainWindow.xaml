@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="EliteDataCollector.UI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:EliteDataCollector.UI"
+    Title="Elite Data Collector">
+
+    <Grid ColumnDefinitions="250,*">
+        <!-- Left Navigation Panel -->
+        <StackPanel Grid.Column="0" Background="#2B2D31" Padding="0" Spacing="0">
+            <TextBlock
+                Padding="20,20,20,10"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="White"
+                Text="Elite Collector" />
+
+            <TextBlock
+                Padding="20,0,20,20"
+                FontSize="12"
+                Foreground="#B5BAC1"
+                Text="CMDR Dashboard" />
+
+            <!-- Navigation Buttons -->
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="📊 Dashboard"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigateDashboard" />
+
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="🛸 Colonization"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigateColonization" />
+
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="🌍 BGS"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigateBGS" />
+
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="⚡ PowerPlay"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigatePowerplay" />
+
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="📰 Contubernium"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigateContubernium" />
+
+            <Border Height="1" Background="#404249" Margin="20,20,20,20" />
+
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="⚙️ Settings"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigateSettings" />
+        </StackPanel>
+
+        <!-- Content Area -->
+        <Grid Grid.Column="1" x:Name="ContentGrid">
+            <Frame x:Name="ContentFrame" />
+        </Grid>
+    </Grid>
+</Window>

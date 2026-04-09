@@ -9,11 +9,14 @@
     ".NETCoreApp,Version=v10.0/win-x64": {
       "EliteDataCollector.Host/1.0.0": {
         "dependencies": {
+          "ColonizationModule": "1.0.0",
           "EliteDataCollector.Core": "1.0.0",
+          "ExplorationModule": "1.0.0",
           "Microsoft.Extensions.Configuration": "10.0.0",
           "Microsoft.Extensions.Configuration.Json": "10.0.0",
           "Microsoft.Extensions.DependencyInjection": "10.0.0",
           "Microsoft.Extensions.Http": "10.0.0",
+          "PowerplayModule": "1.0.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "10.0.5"
         },
         "runtime": {
@@ -1169,6 +1172,17 @@
           }
         }
       },
+      "ColonizationModule/1.0.0": {
+        "dependencies": {
+          "EliteDataCollector.Core": "1.0.0"
+        },
+        "runtime": {
+          "ColonizationModule.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "EliteDataCollector.Core/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Configuration": "10.0.0",
@@ -1178,6 +1192,28 @@
         },
         "runtime": {
           "EliteDataCollector.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "ExplorationModule/1.0.0": {
+        "dependencies": {
+          "EliteDataCollector.Core": "1.0.0"
+        },
+        "runtime": {
+          "ExplorationModule.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "PowerplayModule/1.0.0": {
+        "dependencies": {
+          "EliteDataCollector.Core": "1.0.0"
+        },
+        "runtime": {
+          "PowerplayModule.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -1448,7 +1484,22 @@
       "path": "websocket.client/5.1.1",
       "hashPath": "websocket.client.5.1.1.nupkg.sha512"
     },
+    "ColonizationModule/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
     "EliteDataCollector.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ExplorationModule/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PowerplayModule/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

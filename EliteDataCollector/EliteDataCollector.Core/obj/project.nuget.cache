@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ItfJ5zvHJJU=",
+  "dgSpecHash": "3uJ1Zu0ydBI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+  "projectFilePath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\seva2\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.0\\microsoft.extensions.configuration.10.0.0.nupkg.sha512",
     "C:\\Users\\seva2\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.0\\microsoft.extensions.configuration.abstractions.10.0.0.nupkg.sha512",
@@ -39,9 +39,9 @@
       "code": "NU1510",
       "level": "Warning",
       "message": "PackageReference System.Text.Json will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
-      "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+      "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+      "filePath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
       "libraryId": "System.Text.Json",
       "targetGraphs": [
         "net10.0-windows7.0"

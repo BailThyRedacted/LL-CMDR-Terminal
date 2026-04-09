@@ -1314,11 +1314,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+      "projectUniqueName": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
       "projectName": "EliteDataCollector.Core",
-      "projectPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
+      "projectPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\EliteDataCollector.Core.csproj",
       "packagesPath": "C:\\Users\\seva2\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\seva2\\Documents\\VSCode\\LL CMDR Terminal\\EliteDataCollector\\EliteDataCollector.Core\\obj\\",
+      "outputPath": "C:\\Users\\seva2\\RiderProjects\\LL-CMDR-Terminal\\EliteDataCollector\\EliteDataCollector.Core\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\seva2\\AppData\\Roaming\\NuGet\\NuGet.Config"

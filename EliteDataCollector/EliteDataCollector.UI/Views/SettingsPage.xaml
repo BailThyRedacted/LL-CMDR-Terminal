@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="EliteDataCollector.UI.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Padding="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            FontSize="32"
+            FontWeight="Bold"
+            Text="Settings" />
+
+        <ScrollViewer Grid.Row="1" Margin="0,20,0,0">
+            <StackPanel Spacing="20" MaxWidth="600">
+
+                <!-- Display Metrics Section -->
+                <Border Padding="20" Background="#F0F0F0" CornerRadius="8">
+                    <StackPanel Spacing="15">
+                        <TextBlock FontSize="18" FontWeight="Bold" Text="Display Metrics" />
+                        <TextBlock FontSize="12" Foreground="#666666" Text="Choose which metrics to display on the dashboard:" />
+                        <CheckBox Content="Credits" x:Name="CreditsCheck" />
+                        <CheckBox Content="Current Location" x:Name="LocationCheck" />
+                        <CheckBox Content="Faction Influence" x:Name="InfluenceCheck" />
+                        <CheckBox Content="PowerPlay Merits" x:Name="MeritsCheck" />
+                        <CheckBox Content="Recent Activity" x:Name="ActivityCheck" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Data Refresh Section -->
+                <Border Padding="20" Background="#F0F0F0" CornerRadius="8">
+                    <StackPanel Spacing="15">
+                        <TextBlock FontSize="18" FontWeight="Bold" Text="Data Refresh" />
+                        <StackPanel Spacing="10">
+                            <TextBlock FontSize="12" Foreground="#666666" Text="Supabase Refresh Interval (minutes):" />
+                            <NumberBox
+                                x:Name="RefreshIntervalBox"
+                                Minimum="1"
+                                Maximum="60"
+                                SpinButtonPlacementMode="Inline" />
+                        </StackPanel>
+                        <CheckBox
+                            x:Name="ContuberniumCheckBox"
+                            Content="Enable Contubernium Newsletter Check" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Save/Reset Buttons -->
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button
+                        Padding="15,10"
+                        Background="#0078D4"
+                        Content="Save Settings"
+                        Foreground="White"
+                        Click="OnSaveClick" />
+                    <Button
+                        Padding="15,10"
+                        Background="#D13438"
+                        Content="Reset to Defaults"
+                        Foreground="White"
+                        Click="OnResetClick" />
+                </StackPanel>
+
+                <TextBlock
+                    x:Name="SaveMessage"
+                    FontSize="12"
+                    Foreground="#107C10"
+                    FontWeight="SemiBold" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
+

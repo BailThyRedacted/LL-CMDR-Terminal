@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="EliteDataCollector.UI.Views.ContuberniumPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Padding="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <!-- Header -->
+        <TextBlock
+            Grid.Row="0"
+            FontSize="32"
+            FontWeight="Bold"
+            Text="📰 Contubernium Newsletter" />
+
+        <!-- Info Bar -->
+        <Border Grid.Row="1" Padding="15" Background="#E7F3FF" CornerRadius="4" BorderBrush="#0078D4" BorderThickness="1">
+            <StackPanel Spacing="10" Orientation="Horizontal">
+                <StackPanel Spacing="5">
+                    <TextBlock FontSize="12" FontWeight="Bold" Text="Newsletter fetches on the 14th and 28th of each month" />
+                    <TextBlock FontSize="11" Foreground="#666666" x:Name="LastUpdateTime" />
+                </StackPanel>
+                <Button
+                    Content="Refresh Now"
+                    Padding="10,8"
+                    Background="#0078D4"
+                    Foreground="White"
+                    Click="OnManualRefreshClick"
+                    VerticalAlignment="Center"
+                    Margin="20,0,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- Newsletter Content -->
+        <Border Grid.Row="2" Padding="20" Background="#F0F0F0" CornerRadius="8">
+            <ScrollViewer>
+                <TextBlock
+                    x:Name="NewsletterContent"
+                    FontSize="13"
+                    LineHeight="20"
+                    Foreground="#333333"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Page>
+
