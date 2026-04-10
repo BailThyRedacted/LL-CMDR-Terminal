@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>false</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EliteDataCollector.Core\EliteDataCollector.Core.csproj" />
-    <ProjectReference Include="..\EliteDataCollector.UI\EliteDataCollector.UI.csproj" />
     <ProjectReference Include="..\Modules\ColonizationModule\ColonizationModule.csproj" />
     <ProjectReference Include="..\Modules\ExplorationModule\ExplorationModule.csproj" />
     <ProjectReference Include="..\Modules\PowerplayModule\PowerplayModule.csproj" />
@@ -26,10 +25,10 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
   </ItemGroup>
 
 </Project>
