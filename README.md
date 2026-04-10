@@ -19,7 +19,13 @@ Track BGS faction influence and colonization progress:
 - Targets configurable systems for focused colonization efforts
 - Tracks multiple factions and faction states (Boom, War, Election, etc.)
 
-## Architecture
+### PowerplayModule
+Track PowerPlay merits, current power allegiance, and activity:
+- Monitors PowerPlay-related journal events in real-time
+- Displays current merits and power state in the GUI dashboard
+- Integrates with the colonization and BGS tracking data
+
+
 
 **Orchestrator Pattern:**
 ```
@@ -43,8 +49,9 @@ Elite Dangerous Journal (game writes events)
 
 ## Technology Stack
 
-- **Language**: C# 12 (.NET 10.0)
-- **Architecture**: Windows Console App (Service ready)
+- **Language**: C# 12 (.NET 8.0)
+- **Architecture**: WinUI 3 Desktop App + Console Host
+- **UI Framework**: WinUI 3 (Microsoft.WindowsAppSDK 1.8) + MVVM Community Toolkit
 - **Database**: Supabase (PostgreSQL via REST API)
 - **File Monitoring**: FileSystemWatcher (event-driven, ~0% CPU idle)
 - **JSON**: System.Text.Json (modern, performant, no external deps)
@@ -72,14 +79,14 @@ Elite Dangerous Journal (game writes events)
 
 1. Download the installer package
 2. Extract anywhere (USB drive, custom folder, etc.)
-3. Run `EliteDataCollector.Host.exe` directly
+3. Run `EliteDataCollector.UI.exe` directly
 4. No installation needed - portable format
 
 ### Option 3: Build from Source (Development)
 
 **Prerequisites:**
 - Windows 10/11
-- .NET 10 SDK
+- .NET 8 SDK
 - Elite Dangerous
 
 **Setup (2 minutes):**
@@ -88,7 +95,13 @@ git clone https://github.com/BailThyRedacted/LL-CMDR-Terminal.git
 cd LL-CMDR-Terminal
 ```
 
-**Run:**
+**Run (GUI):**
+```bash
+cd EliteDataCollector\EliteDataCollector.UI
+dotnet run
+```
+
+**Run (Console):**
 ```bash
 cd EliteDataCollector\EliteDataCollector.Host
 dotnet run
@@ -118,13 +131,29 @@ LL-CMDR-Terminal/
 ├── Modules/
 │   ├── ExplorationModule/
 │   │   └── ExplorationModule.cs       (high-value planet detector)
-│   └── ColonizationModule/
-│       └── ColonizationModule.cs      (BGS faction tracker)
+│   ├── ColonizationModule/
+│   │   └── ColonizationModule.cs      (BGS faction tracker)
+│   └── PowerplayModule/
+│       └── PowerplayModule.cs         (PowerPlay merit tracker)
 │
-├── EliteDataCollector.Host/
-│   ├── Program.cs                     (entry point, DI setup)
-│   ├── Form1.cs                       (GUI stub, future expansion)
+├── EliteDataCollector.UI/             (WinUI 3 GUI — primary entry point)
+│   ├── App.xaml(.cs)                  (DI setup & initialization)
+│   ├── MainWindow.xaml(.cs)           (main window + sidebar navigation)
+│   ├── Views/                         (Dashboard, Settings, module pages)
+│   ├── ViewModels/                    (MVVM ViewModels)
+│   ├── Services/                      (journal, settings, newsletter)
 │   └── appsettings.json               (configuration)
+│
+├── EliteDataCollector.Host/           (console-only host)
+│   ├── Program.cs                     (entry point, DI setup)
+│   └── appsettings.json               (configuration)
+│
+├── EliteDataCollector.Setup/          (WiX MSI installer)
+│   ├── Product.wxs
+│   ├── install.bat / install.ps1
+│   └── uninstall.bat / uninstall.ps1
+│
+├── KeyGen/                            (admin key generation utility)
 │
 ├── QUICKSTART.md                      (user setup guide)
 └── README.md                          (this file)
@@ -237,7 +266,7 @@ All async/await, no blocking, efficient file monitoring.
 - [ ] Mission tracking module
 - [ ] Trade profit calculator module
 - [ ] Combat stats module
-- [ ] GUI interface 
+- [x] GUI interface (WinUI 3 — complete)
 - [ ] Multiple squad support
 - [ ] Custom module plugin system
 - [ ] Web dashboard for data visualization

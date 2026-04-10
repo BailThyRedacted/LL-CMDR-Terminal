@@ -125,7 +125,7 @@ ViewModel.PropertyChanged += (s, e) =>
 
 ## Testing Checklist
 
-- [ ] Build succeeds (once XAML compiler issue fixed)
+- [x] Build succeeds
 - [ ] App launches without errors
 - [ ] Dashboard loads with placeholder data
 - [ ] Navigation buttons switch pages
@@ -169,7 +169,7 @@ ViewModel.PropertyChanged += (s, e) =>
 
 ### Required
 - Windows 10/11
-- .NET 10 SDK
+- .NET 8 SDK
 - Visual Studio 2022 or Rider
 
 ### Configuration Files

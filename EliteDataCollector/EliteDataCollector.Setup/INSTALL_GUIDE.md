@@ -47,7 +47,7 @@ Download and install the .NET SDK from [https://dot.net/download](https://dot.ne
 Right-click `install.bat` and choose **Run as administrator**.
 
 ### Application won't start after install
-Run `EliteDataCollector.Host.exe` from a Command Prompt to see the error output directly.
+Run `EliteDataCollector.UI.exe` from a Command Prompt to see the error output directly.
 
 ### Missing or corrupted files
 Re-run `install.bat` — it will overwrite the existing installation cleanly.

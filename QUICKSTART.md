@@ -45,14 +45,14 @@ Skip this section unless you want to modify the code or build from source.
 ### Prerequisites
 
 **Download and install:**
-- .NET 10 SDK: https://dotnet.microsoft.com/en-us/download
+- .NET 8 SDK: https://dotnet.microsoft.com/en-us/download
 - Visual Studio Code or Visual Studio (optional, for development)
 
 **Verify installation:**
 ```bash
 dotnet --version
 ```
-Should show version 10.0.x or higher.
+Should show version 8.0.x or higher.
 
 ### Step 1: Clone Repository
 ```bash
@@ -236,7 +236,7 @@ To upgrade or reinstall:
 ## Troubleshooting
 
 ### "dotnet: command not found"
-**Solution:** .NET 10 is not installed. Download and install from: https://dotnet.microsoft.com/en-us/download/dotnet/10.0
+**Solution:** .NET 8 SDK is not installed. Download and install from: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
 
 ### "Journal files not found"
 **Solution:** Elite Dangerous journal hasn't been created yet. Launch Elite Dangerous once and fly for a few seconds to trigger journal creation.
@@ -371,7 +371,7 @@ Format (JSON array):
 - [ ] Console window opens when launching
 
 ### If Building from Source
-- [ ] .NET 10 SDK installed (`dotnet --version` works)
+- [ ] .NET 8 SDK installed (`dotnet --version` works)
 - [ ] Repository cloned successfully
 - [ ] `dotnet build` shows 0 errors
 - [ ] App starts without errors (`dotnet run`)

@@ -90,7 +90,7 @@ dotnet publish -c Release -o publish --self-contained
 
 ## System Requirements
 
-- **Option 1**: .NET 10 Desktop Runtime (if running from source)
+- **Option 1**: .NET 8 Desktop Runtime (if running from source)
 - **Option 2**: None - the standalone executable includes everything needed
 
 ## Files
