@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="EliteDataCollector.UI.Views.PvPTrackerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Padding="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock
+            Grid.Row="0"
+            FontSize="32"
+            FontWeight="Bold"
+            Text="⚔️ PvP Tracker" />
+
+        <!-- Summary Stats -->
+        <Border Grid.Row="1" Margin="0,20,0,0" Padding="20" Background="#2B2D31" CornerRadius="8">
+            <StackPanel Spacing="10">
+                <TextBlock
+                    x:Name="SummaryText"
+                    FontSize="14"
+                    Foreground="#B5BAC1"
+                    Text="Loading encounter data..." />
+
+                <StackPanel Orientation="Horizontal" Spacing="30">
+                    <StackPanel>
+                        <TextBlock FontSize="24" FontWeight="Bold" Foreground="White" x:Name="TotalCount" Text="0" />
+                        <TextBlock FontSize="11" Foreground="#B5BAC1" Text="Total Encounters" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock FontSize="24" FontWeight="Bold" Foreground="#D13438" x:Name="HostileCount" Text="0" />
+                        <TextBlock FontSize="11" Foreground="#B5BAC1" Text="Hostile" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock FontSize="24" FontWeight="Bold" Foreground="#FF8C00" x:Name="LlAlertCount" Text="0" />
+                        <TextBlock FontSize="11" Foreground="#B5BAC1" Text="LL System Alerts" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Refresh Button -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,15,0,0" Spacing="10">
+            <Button
+                Padding="15,8"
+                Background="#0078D4"
+                Foreground="White"
+                Content="🔄 Refresh"
+                Click="OnRefreshClick" />
+        </StackPanel>
+
+        <!-- Encounter List -->
+        <ListView Grid.Row="3" Margin="0,15,0,0" x:Name="EncounterList" SelectionMode="None">
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="10,8" Background="#404249">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="" FontSize="12" FontWeight="Bold" Foreground="#B5BAC1"/>
+                        <TextBlock Grid.Column="1" Text="Time" FontSize="12" FontWeight="Bold" Foreground="#B5BAC1"/>
+                        <TextBlock Grid.Column="2" Text="System" FontSize="12" FontWeight="Bold" Foreground="#B5BAC1"/>
+                        <TextBlock Grid.Column="3" Text="Event" FontSize="12" FontWeight="Bold" Foreground="#B5BAC1"/>
+                        <TextBlock Grid.Column="4" Text="CMDR" FontSize="12" FontWeight="Bold" Foreground="#B5BAC1"/>
+                        <TextBlock Grid.Column="5" Text="Outcome" FontSize="12" FontWeight="Bold" Foreground="#B5BAC1"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="10,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding StatusIcon}" FontSize="14"/>
+                        <TextBlock Grid.Column="1" Text="{Binding TimestampDisplay}" FontSize="12" Foreground="#B5BAC1"/>
+                        <TextBlock Grid.Column="2" Text="{Binding System}" FontSize="12" Foreground="White"/>
+                        <TextBlock Grid.Column="3" Text="{Binding EventType}" FontSize="12" Foreground="White"/>
+                        <TextBlock Grid.Column="4" Text="{Binding OtherCmdr}" FontSize="12" Foreground="#5BCB6D" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Outcome}" FontSize="12" Foreground="#B5BAC1"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>
+

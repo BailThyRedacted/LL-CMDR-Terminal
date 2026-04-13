@@ -135,6 +135,7 @@ namespace EliteDataCollector.Core
             _outputWriter?.WriteLine($"  - ColonizationModule: {(preferences.ColonizationEnabled ? "ENABLED" : "disabled")}");
             _outputWriter?.WriteLine($"  - ExplorationModule: {(preferences.ExplorationEnabled ? "ENABLED" : "disabled")}");
             _outputWriter?.WriteLine($"  - PowerplayModule:   {(preferences.PowerplayEnabled ? "ENABLED" : "disabled")}");
+            _outputWriter?.WriteLine($"  - PvPTrackerModule:  {(preferences.PvPTrackerEnabled ? "ENABLED" : "disabled")}");
         }
 
         /// <summary>

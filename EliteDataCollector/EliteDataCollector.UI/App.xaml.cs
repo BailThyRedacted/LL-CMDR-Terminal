@@ -75,7 +75,6 @@ namespace EliteDataCollector.UI
                     configuration,
                     sp.GetService<SettingsManager>(),
                     sp.GetRequiredService<OutputWriter>()));
-            services.AddSingleton<SetupConsole>();
 
             // Game monitoring services
             services.AddSingleton<GameProcessMonitor>(sp =>
@@ -118,12 +117,22 @@ namespace EliteDataCollector.UI
             services.AddSingleton<PowerplayViewModel>();
             services.AddSingleton<ContuberniumViewModel>();
             services.AddSingleton<NavigationViewModel>();
+            services.AddSingleton<PvPTrackerViewModel>();
 
             ServiceProvider = services.BuildServiceProvider();
 
-            // Run setup if needed
-            var setupConsole = ServiceProvider.GetRequiredService<SetupConsole>();
-            var settings = await setupConsole.RunSetupIfNeededAsync();
+            // Load settings directly (no console prompts in GUI mode)
+            var settingsManager = ServiceProvider.GetRequiredService<SettingsManager>();
+            var settings = await settingsManager.LoadAsync();
+
+            // If setup not complete, mark as first-run so UI navigates to Settings page
+            if (!settings.SetupComplete)
+            {
+                AppContext.IsFirstRun = true;
+                // Use defaults so the app can start; user configures via Settings page
+                settings.Modules = new ModuleSettings();
+                settings.CommanderName = "CMDR";
+            }
 
             // Initialize MainCore
             var gameMonitor = ServiceProvider.GetRequiredService<GameProcessMonitor>();
@@ -140,7 +149,7 @@ namespace EliteDataCollector.UI
                 updateService: updateService,
                 updateDownloader: updateDownloader,
                 idleDetector: idleDetector);
-            mainCore.SetCommanderContext(1, settings.CommanderName);
+            mainCore.SetCommanderContext(settings.CommanderId, settings.CommanderName);
             mainCore.SetModulePreferences(settings.Modules);
 
             // Initialize and register modules
@@ -163,6 +172,13 @@ namespace EliteDataCollector.UI
             if (settings.Modules.PowerplayEnabled)
             {
                 var m = new PowerplayModule.PowerplayModule();
+                await m.InitializeAsync(ServiceProvider);
+                modules.Add(m);
+            }
+
+            if (settings.Modules.PvPTrackerEnabled)
+            {
+                var m = new PvPTrackerModule.PvPTrackerModule();
                 await m.InitializeAsync(ServiceProvider);
                 modules.Add(m);
             }

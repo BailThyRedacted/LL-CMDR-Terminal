@@ -61,6 +61,10 @@ namespace EliteDataCollector.Core.Services
         /// <summary>User's choice for pending update (Yes/Later/No)</summary>
         [JsonPropertyName("pending_update_choice")]
         public string? PendingUpdateChoice { get; set; } = null;
+
+        /// <summary>Interface mode: "terminal" or "gui". Set by Launcher on first run.</summary>
+        [JsonPropertyName("interface_mode")]
+        public string InterfaceMode { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -79,5 +83,9 @@ namespace EliteDataCollector.Core.Services
         /// <summary>Enable PowerplayModule (PowerPlay activity and ALD system state tracking)</summary>
         [JsonPropertyName("powerplay_enabled")]
         public bool PowerplayEnabled { get; set; } = true;
+
+        /// <summary>Enable PvPTrackerModule (player encounter tracking and LL-system hostile alerts)</summary>
+        [JsonPropertyName("pvptracker_enabled")]
+        public bool PvPTrackerEnabled { get; set; } = true;
     }
 }

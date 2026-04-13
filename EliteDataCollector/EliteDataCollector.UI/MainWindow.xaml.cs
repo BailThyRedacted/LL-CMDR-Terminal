@@ -19,8 +19,15 @@ namespace EliteDataCollector.UI
             var appWindow = AppWindow.GetFromWindowId(windowId);
             appWindow.Resize(new SizeInt32(1200, 800));
 
-            // Navigate to dashboard by default
-            ContentFrame.Navigate(typeof(DashboardPage));
+            // Navigate to settings on first run, otherwise dashboard
+            if (AppContext.IsFirstRun)
+            {
+                ContentFrame.Navigate(typeof(SettingsPage));
+            }
+            else
+            {
+                ContentFrame.Navigate(typeof(DashboardPage));
+            }
         }
 
         private void OnNavigateDashboard(object sender, RoutedEventArgs e)
@@ -46,6 +53,11 @@ namespace EliteDataCollector.UI
         private void OnNavigateContubernium(object sender, RoutedEventArgs e)
         {
             ContentFrame.Navigate(typeof(ContuberniumPage));
+        }
+
+        private void OnNavigatePvPTracker(object sender, RoutedEventArgs e)
+        {
+            ContentFrame.Navigate(typeof(PvPTrackerPage));
         }
 
         private void OnNavigateSettings(object sender, RoutedEventArgs e)

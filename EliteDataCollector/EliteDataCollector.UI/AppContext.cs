@@ -9,6 +9,12 @@ namespace EliteDataCollector.UI
     public static class AppContext
     {
         public static MainCore? MainCore { get; set; }
+
+        /// <summary>
+        /// True if this is a first-run (setup not complete).
+        /// When true, the main window navigates to Settings instead of Dashboard.
+        /// </summary>
+        public static bool IsFirstRun { get; set; }
     }
 }
 

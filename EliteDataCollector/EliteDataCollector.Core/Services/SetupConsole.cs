@@ -82,6 +82,7 @@ namespace EliteDataCollector.Core.Services
             _outputWriter?.WriteLine("Configure modules:");
             settings.Modules.ColonizationEnabled = PromptYesNo("Enable ColonizationModule (track BGS and PowerPlay)?", true);
             settings.Modules.ExplorationEnabled = PromptYesNo("Enable ExplorationModule (exobiology alerts)?", false);
+            settings.Modules.PvPTrackerEnabled = PromptYesNo("Enable PvPTrackerModule (player encounter tracking & LL-system alerts)?", true);
 
             // Step 4: Save settings
             settings.SetupComplete = true;

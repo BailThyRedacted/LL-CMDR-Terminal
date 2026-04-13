@@ -20,6 +20,50 @@
         <ScrollViewer Grid.Row="1" Margin="0,20,0,0">
             <StackPanel Spacing="20" MaxWidth="600">
 
+                <!-- First-Run Banner -->
+                <Border x:Name="FirstRunBanner" Padding="20" Background="#FFF3CD" CornerRadius="8" Visibility="Collapsed">
+                    <StackPanel Spacing="8">
+                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="#856404" Text="⚠️ First-Time Setup Required" />
+                        <TextBlock FontSize="12" Foreground="#856404" TextWrapping="Wrap"
+                            Text="Welcome! Please enter your authentication key and configure your modules below, then click Save Settings to complete setup." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Commander Section -->
+                <Border Padding="20" Background="#F0F0F0" CornerRadius="8">
+                    <StackPanel Spacing="15">
+                        <TextBlock FontSize="18" FontWeight="Bold" Text="Commander" />
+                        <TextBlock FontSize="12" Foreground="#666666" Text="Your authentication key and commander identity:" />
+                        <StackPanel Spacing="8">
+                            <TextBlock FontSize="12" Text="Authentication Key:" />
+                            <TextBox x:Name="AuthKeyBox" PlaceholderText="KEY-CMDR000000123-ABC123EF" />
+                        </StackPanel>
+                        <StackPanel Spacing="8">
+                            <TextBlock FontSize="12" Text="Commander Name:" />
+                            <TextBox x:Name="CommanderNameBox" PlaceholderText="CMDR Name" IsReadOnly="True" />
+                        </StackPanel>
+                        <Button
+                            Padding="10,6"
+                            Background="#107C10"
+                            Content="Validate Key"
+                            Foreground="White"
+                            Click="OnValidateKeyClick" />
+                        <TextBlock x:Name="KeyValidationMessage" FontSize="12" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Modules Section -->
+                <Border Padding="20" Background="#F0F0F0" CornerRadius="8">
+                    <StackPanel Spacing="15">
+                        <TextBlock FontSize="18" FontWeight="Bold" Text="Modules" />
+                        <TextBlock FontSize="12" Foreground="#666666" Text="Enable or disable data collection modules:" />
+                        <ToggleSwitch x:Name="ColonizationToggle" Header="Colonization Module" OnContent="Enabled" OffContent="Disabled" />
+                        <ToggleSwitch x:Name="ExplorationToggle" Header="Exploration Module" OnContent="Enabled" OffContent="Disabled" />
+                        <ToggleSwitch x:Name="PowerplayToggle" Header="Powerplay Module" OnContent="Enabled" OffContent="Disabled" />
+                        <ToggleSwitch x:Name="PvPTrackerToggle" Header="PvP Tracker Module" OnContent="Enabled" OffContent="Disabled" />
+                    </StackPanel>
+                </Border>
+
                 <!-- Display Metrics Section -->
                 <Border Padding="20" Background="#F0F0F0" CornerRadius="8">
                     <StackPanel Spacing="15">

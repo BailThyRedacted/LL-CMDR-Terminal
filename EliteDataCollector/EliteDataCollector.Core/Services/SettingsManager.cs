@@ -131,6 +131,7 @@ namespace EliteDataCollector.Core.Services
                     LastVerified = settings.LastVerified,
                     Modules = settings.Modules,
                     SetupComplete = settings.SetupComplete,
+                    InterfaceMode = settings.InterfaceMode,
                     InaraApiKeyEncrypted = string.IsNullOrEmpty(settings.InaraApiKeyEncrypted)
                         ? string.Empty
                         : CredentialEncryption.Encrypt(settings.InaraApiKeyEncrypted)

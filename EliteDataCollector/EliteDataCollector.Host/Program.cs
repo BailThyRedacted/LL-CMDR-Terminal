@@ -126,6 +126,7 @@ namespace EliteDataCollector.Host
                 outputWriter.WriteLine($"ColonizationModule: {(settings.Modules.ColonizationEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine($"ExplorationModule: {(settings.Modules.ExplorationEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine($"PowerplayModule:   {(settings.Modules.PowerplayEnabled ? "ENABLED" : "disabled")}");
+                outputWriter.WriteLine($"PvPTrackerModule:  {(settings.Modules.PvPTrackerEnabled ? "ENABLED" : "disabled")}");
                 outputWriter.WriteLine("");
 
                 // ===== INITIALIZE MAINCORE =====
@@ -168,6 +169,14 @@ namespace EliteDataCollector.Host
                 {
                     outputWriter.WriteLine("Initializing PowerplayModule...");
                     var m = new PowerplayModule.PowerplayModule();
+                    await m.InitializeAsync(serviceProvider);
+                    modules.Add(m);
+                }
+
+                if (settings.Modules.PvPTrackerEnabled)
+                {
+                    outputWriter.WriteLine("Initializing PvPTrackerModule...");
+                    var m = new PvPTrackerModule.PvPTrackerModule();
                     await m.InitializeAsync(serviceProvider);
                     modules.Add(m);
                 }

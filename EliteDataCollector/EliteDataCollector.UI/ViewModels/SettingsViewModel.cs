@@ -1,16 +1,22 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EliteDataCollector.Core.Services;
 using EliteDataCollector.UI.Services;
 
 namespace EliteDataCollector.UI.ViewModels
 {
     /// <summary>
-    /// Settings view model - manages dashboard configuration and persistence.
+    /// Settings view model - manages dashboard configuration, module toggles,
+    /// and commander setup. Handles both first-run setup and ongoing config.
     /// </summary>
     public partial class SettingsViewModel : ObservableObject
     {
         private readonly DashboardSettingsService _settingsService;
         private readonly DashboardViewModel _dashboardViewModel;
+        private readonly SettingsManager _settingsManager;
+        private readonly KeyValidator _keyValidator;
+
+        // ===== Dashboard Settings =====
 
         [ObservableProperty]
         private int supabaseRefreshIntervalMinutes;
@@ -36,14 +42,47 @@ namespace EliteDataCollector.UI.ViewModels
         [ObservableProperty]
         private string settingsSaveMessage = string.Empty;
 
+        // ===== Commander Settings =====
+
+        [ObservableProperty]
+        private string authenticationKey = string.Empty;
+
+        [ObservableProperty]
+        private string commanderName = string.Empty;
+
+        [ObservableProperty]
+        private string keyValidationMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool isKeyValid;
+
+        // ===== Module Toggles =====
+
+        [ObservableProperty]
+        private bool colonizationEnabled;
+
+        [ObservableProperty]
+        private bool explorationEnabled;
+
+        [ObservableProperty]
+        private bool powerplayEnabled;
+
+        [ObservableProperty]
+        private bool pvpTrackerEnabled;
+
         public SettingsViewModel(
             DashboardSettingsService settingsService,
-            DashboardViewModel dashboardViewModel)
+            DashboardViewModel dashboardViewModel,
+            SettingsManager settingsManager,
+            KeyValidator keyValidator)
         {
             _settingsService = settingsService;
             _dashboardViewModel = dashboardViewModel;
+            _settingsManager = settingsManager;
+            _keyValidator = keyValidator;
 
             LoadSettings();
+            _ = LoadAppSettingsAsync();
         }
 
         private void LoadSettings()
@@ -60,27 +99,110 @@ namespace EliteDataCollector.UI.ViewModels
             ShowRecentActivity = settings.DisplayMetrics.Contains("RecentActivity");
         }
 
-        [RelayCommand]
-        public void SaveSettings()
+        private async Task LoadAppSettingsAsync()
         {
-            var settings = new DashboardSettings
+            try
+            {
+                var appSettings = await _settingsManager.LoadAsync();
+                CommanderName = appSettings.CommanderName;
+                ColonizationEnabled = appSettings.Modules.ColonizationEnabled;
+                ExplorationEnabled = appSettings.Modules.ExplorationEnabled;
+                PowerplayEnabled = appSettings.Modules.PowerplayEnabled;
+                PvpTrackerEnabled = appSettings.Modules.PvPTrackerEnabled;
+                IsKeyValid = appSettings.SetupComplete;
+            }
+            catch
+            {
+                // Settings may not exist yet on first run
+            }
+        }
+
+        /// <summary>
+        /// Validate the authentication key and extract commander info.
+        /// </summary>
+        public (bool success, string message) ValidateKey(string key)
+        {
+            try
+            {
+                var (valid, commanderId, cmdName) = _keyValidator.ValidateKey(key);
+                if (valid)
+                {
+                    CommanderName = cmdName;
+                    AuthenticationKey = key;
+                    IsKeyValid = true;
+                    KeyValidationMessage = $"✓ Valid: {cmdName}";
+                    return (true, $"✓ Valid: {cmdName}");
+                }
+                else
+                {
+                    IsKeyValid = false;
+                    KeyValidationMessage = "✗ Invalid key";
+                    return (false, "✗ Invalid key");
+                }
+            }
+            catch (Exception ex)
+            {
+                IsKeyValid = false;
+                KeyValidationMessage = $"✗ Error: {ex.Message}";
+                return (false, $"✗ Error: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        public async Task SaveSettings()
+        {
+            // Save dashboard settings
+            var dashSettings = new DashboardSettings
             {
                 SupabaseRefreshIntervalMinutes = SupabaseRefreshIntervalMinutes,
                 ContuberniumCheckEnabled = ContuberniumCheckEnabled,
                 DisplayMetrics = new List<string>()
             };
 
-            if (ShowCredits) settings.DisplayMetrics.Add("Credits");
-            if (ShowCurrentLocation) settings.DisplayMetrics.Add("CurrentLocation");
-            if (ShowFactionInfluence) settings.DisplayMetrics.Add("FactionInfluence");
-            if (ShowPowerplayMerits) settings.DisplayMetrics.Add("PowerplayMerits");
-            if (ShowRecentActivity) settings.DisplayMetrics.Add("RecentActivity");
+            if (ShowCredits) dashSettings.DisplayMetrics.Add("Credits");
+            if (ShowCurrentLocation) dashSettings.DisplayMetrics.Add("CurrentLocation");
+            if (ShowFactionInfluence) dashSettings.DisplayMetrics.Add("FactionInfluence");
+            if (ShowPowerplayMerits) dashSettings.DisplayMetrics.Add("PowerplayMerits");
+            if (ShowRecentActivity) dashSettings.DisplayMetrics.Add("RecentActivity");
 
-            _settingsService.SaveSettings(settings);
-            SettingsSaveMessage = "Settings saved successfully!";
+            _settingsService.SaveSettings(dashSettings);
 
-            // Clear message after 3 seconds
-            Task.Delay(3000).ContinueWith(_ => 
+            // Save app settings (commander + modules)
+            try
+            {
+                var appSettings = await _settingsManager.LoadAsync();
+
+                // Update commander info if key was validated
+                if (IsKeyValid && !string.IsNullOrEmpty(AuthenticationKey))
+                {
+                    var (valid, commanderId, cmdName) = _keyValidator.ValidateKey(AuthenticationKey);
+                    if (valid)
+                    {
+                        appSettings.InaraApiKeyEncrypted = AuthenticationKey;
+                        appSettings.CommanderId = commanderId;
+                        appSettings.CommanderName = cmdName;
+                        appSettings.LastVerified = DateTime.UtcNow;
+                    }
+                }
+
+                appSettings.Modules.ColonizationEnabled = ColonizationEnabled;
+                appSettings.Modules.ExplorationEnabled = ExplorationEnabled;
+                appSettings.Modules.PowerplayEnabled = PowerplayEnabled;
+                appSettings.Modules.PvPTrackerEnabled = PvpTrackerEnabled;
+                appSettings.SetupComplete = IsKeyValid;
+
+                await _settingsManager.SaveAsync(appSettings);
+            }
+            catch (Exception ex)
+            {
+                SettingsSaveMessage = $"Error saving: {ex.Message}";
+                return;
+            }
+
+            SettingsSaveMessage = "Settings saved successfully! Restart app for module changes to take effect.";
+
+            // Clear message after 5 seconds
+            _ = Task.Delay(5000).ContinueWith(_ =>
             {
                 SettingsSaveMessage = string.Empty;
             });
@@ -105,9 +227,16 @@ namespace EliteDataCollector.UI.ViewModels
 
             _settingsService.SaveSettings(defaultSettings);
             LoadSettings();
+
+            // Reset module toggles to defaults
+            ColonizationEnabled = true;
+            ExplorationEnabled = true;
+            PowerplayEnabled = true;
+            PvpTrackerEnabled = true;
+
             SettingsSaveMessage = "Reset to defaults!";
 
-            Task.Delay(3000).ContinueWith(_ => 
+            _ = Task.Delay(3000).ContinueWith(_ =>
             {
                 SettingsSaveMessage = string.Empty;
             });

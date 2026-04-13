@@ -78,6 +78,17 @@
                 HorizontalContentAlignment="Left"
                 Click="OnNavigateContubernium" />
 
+            <Button
+                Padding="20,12"
+                Background="Transparent"
+                BorderThickness="0"
+                Content="⚔️ PvP Tracker"
+                Foreground="White"
+                FontSize="14"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Click="OnNavigatePvPTracker" />
+
             <Border Height="1" Background="#404249" Margin="20,20,20,20" />
 
             <Button

@@ -2,8 +2,10 @@
   <Project Path="EliteDataCollector.Core/EliteDataCollector.Core.csproj" />
   <Project Path="EliteDataCollector.Host/EliteDataCollector.Host.csproj" />
   <Project Path="EliteDataCollector.UI/EliteDataCollector.UI.csproj" />
+  <Project Path="EliteDataCollector.Launcher/EliteDataCollector.Launcher.csproj" />
   <Project Path="Modules/ColonizationModule/ColonizationModule.csproj" />
   <Project Path="Modules/ExplorationModule/ExplorationModule.csproj" />
   <Project Path="Modules/PowerplayModule/PowerplayModule.csproj" />
+  <Project Path="Modules/PvPTrackerModule/PvPTrackerModule.csproj" />
   <Project Path="KeyGen/KeyGen.csproj" />
 </Solution>

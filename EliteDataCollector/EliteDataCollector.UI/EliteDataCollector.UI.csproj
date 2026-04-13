@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Modules\ColonizationModule\ColonizationModule.csproj" />
     <ProjectReference Include="..\Modules\ExplorationModule\ExplorationModule.csproj" />
     <ProjectReference Include="..\Modules\PowerplayModule\PowerplayModule.csproj" />
+    <ProjectReference Include="..\Modules\PvPTrackerModule\PvPTrackerModule.csproj" />
   </ItemGroup>
 
   <ItemGroup>
