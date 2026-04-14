@@ -32,7 +32,7 @@ $ErrorActionPreference = "Stop"
 # Configuration
 $AppName        = "Elite Data Collector"
 $AppVersion     = "2.1.0.0"
-$AppExecutable  = "EliteDataCollector.Host.exe"
+$AppExecutable  = "EliteDataCollector.UI.exe"
 $Manufacturer   = "LL CMDR Terminal"
 
 # Determine installation path
@@ -42,7 +42,7 @@ if ([string]::IsNullOrEmpty($InstallPath)) {
 
 # Script and project locations
 $ScriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectFile = Join-Path $ScriptDir "..\EliteDataCollector.Host\EliteDataCollector.Host.csproj"
+$ProjectFile = Join-Path $ScriptDir "..\EliteDataCollector.UI\EliteDataCollector.UI.csproj"
 $PublishDir  = Join-Path $ScriptDir "publish"
 
 Write-Host ""
@@ -73,10 +73,7 @@ Write-Host "[1/4] Building self-contained package..." -ForegroundColor Cyan
 try {
     $result = dotnet publish $ProjectFile `
         --configuration Release `
-        --runtime win-x64 `
-        --self-contained true `
         --output $PublishDir `
-        -p:PublishSingleFile=false `
         /nologo /consoleloggerparameters:ErrorsOnly
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish exited with code $LASTEXITCODE" }
     Write-Host "[OK]   Build complete" -ForegroundColor Green

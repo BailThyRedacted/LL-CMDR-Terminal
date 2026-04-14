@@ -3,9 +3,9 @@ setlocal enabledelayedexpansion
 
 set "APP_NAME=Elite Data Collector"
 set "APP_VERSION=2.1.0.0"
-set "APP_EXE=EliteDataCollector.Host.exe"
+set "APP_EXE=EliteDataCollector.UI.exe"
 set "SCRIPT_DIR=%~dp0"
-set "PROJECT_FILE=%SCRIPT_DIR%..\EliteDataCollector.Host\EliteDataCollector.Host.csproj"
+set "PROJECT_FILE=%SCRIPT_DIR%..\EliteDataCollector.UI\EliteDataCollector.UI.csproj"
 set "PUBLISH_DIR=%SCRIPT_DIR%publish"
 set "INSTALL_PATH=%ProgramFiles%\Elite Data Collector"
 
@@ -37,10 +37,7 @@ REM ── Step 3: Publish self-contained application ────────�
 echo [1/4] Building self-contained package...
 dotnet publish "%PROJECT_FILE%" ^
     --configuration Release ^
-    --runtime win-x64 ^
-    --self-contained true ^
     --output "%PUBLISH_DIR%" ^
-    -p:PublishSingleFile=false ^
     /nologo /consoleloggerparameters:ErrorsOnly
 
 if %errorlevel% neq 0 (

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk/latest">
   <PropertyGroup>
     <OutputType>exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
 
     <!-- WiX Toolset properties (if using WiX as library) -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -9,6 +9,6 @@
   </PropertyGroup>
 
   <Target Name="BuildMSI" BeforeTargets="Build">
-    <Exec Command="wix build -o bin\Debug\EliteDataCollector.Host.msi Product.wxs" WorkingDirectory="$(ProjectDir)" />
+    <Exec Command="wix build -o bin\Debug\EliteDataCollector-Setup.msi Product.wxs -ext WixToolset.UI.wixext" WorkingDirectory="$(ProjectDir)" />
   </Target>
 </Project>

@@ -4,41 +4,54 @@ REM This script removes Elite Data Collector from the system
 
 setlocal enabledelayedexpansion
 
-REM Define installation paths
-if "%ProgramFiles(x86)%" neq "" (
-    set "INSTALL_PATH=%ProgramFiles(x86)%\Elite Data Collector"
-) else (
-    set "INSTALL_PATH=%ProgramFiles%\Elite Data Collector"
+set "APP_NAME=Elite Data Collector"
+set "INSTALL_PATH=%ProgramFiles%\Elite Data Collector"
+
+echo.
+echo ========================================
+echo  %APP_NAME% - Uninstaller
+echo ========================================
+echo.
+
+REM ── Step 0: UAC self-elevation ─────────────────────────────────────────────
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo  Administrator rights required. Requesting elevation...
+    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs -Wait"
+    exit /b
 )
 
-echo.
-echo ========================================
-echo  Elite Data Collector - Uninstaller
-echo ========================================
-echo.
-
-set /p confirm="Are you sure you want to uninstall Elite Data Collector? (Y/N): "
+set /p confirm="Are you sure you want to uninstall %APP_NAME%? (Y/N): "
 if /i not "%confirm%"=="Y" (
     echo Uninstallation cancelled.
     exit /b 0
 )
 
 REM ── Guard: abort if the application is still running ──────────────────────
+tasklist /FI "IMAGENAME eq EliteDataCollector.UI.exe" 2>nul | find /I "EliteDataCollector.UI.exe" >nul
+if %errorlevel% equ 0 (
+    echo.
+    echo [ERROR] Elite Data Collector GUI is currently running.
+    echo         Please close the application and run the uninstaller again.
+    echo.
+    pause
+    exit /b 1
+)
 tasklist /FI "IMAGENAME eq EliteDataCollector.Host.exe" 2>nul | find /I "EliteDataCollector.Host.exe" >nul
 if %errorlevel% equ 0 (
     echo.
-    echo [ERROR] Elite Data Collector is currently running.
+    echo [ERROR] Elite Data Collector Terminal is currently running.
     echo         Please close the application and run the uninstaller again.
     echo.
     pause
     exit /b 1
 )
 
-REM Remove shortcuts
+REM Remove shortcuts (system-wide locations matching install.bat)
 echo Removing shortcuts...
-del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Elite Data Collector\Elite Data Collector.lnk" /f /q 2>nul
-del "%USERPROFILE%\Desktop\Elite Data Collector.lnk" /f /q 2>nul
-rmdir "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Elite Data Collector" 2>nul
+del "%ProgramData%\Microsoft\Windows\Start Menu\Programs\%APP_NAME%\%APP_NAME%.lnk" /f /q 2>nul
+rmdir "%ProgramData%\Microsoft\Windows\Start Menu\Programs\%APP_NAME%" 2>nul
+del "%PUBLIC%\Desktop\%APP_NAME%.lnk" /f /q 2>nul
 
 REM Remove installation directory
 echo Removing application files...
@@ -48,9 +61,8 @@ if exist "%INSTALL_PATH%" (
 
 REM Remove registry entries
 echo Removing registry entries...
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Elite Data Collector" /f 2>nul
-reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Data Collector" /f 2>nul
-reg delete "HKCU\Software\Elite Data Collector" /f 2>nul
+reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\%APP_NAME%" /f 2>nul
+reg delete "HKCU\Software\%APP_NAME%" /f 2>nul
 
 echo.
 echo ========================================
